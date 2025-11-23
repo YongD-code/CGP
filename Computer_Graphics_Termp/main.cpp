@@ -28,6 +28,7 @@ GLvoid Reshape(int w, int h);
 GLvoid InitGL();
 GLvoid InitCubeMesh();
 void   Keyboard(unsigned char key, int x, int y);
+void MouseMotion(int x, int y);
 
 GLuint width = 800, height = 600;
 GLuint shaderProgramID = 0;
@@ -42,6 +43,21 @@ GLint uModelLoc = -1;
 GLint uViewLoc = -1;
 GLint uProjLoc = -1;
 GLint uColorLoc = -1;
+
+//카메라 전역변수 추가
+glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+float lastX = width / 2.0f;
+float lastY = height / 2.0f;
+bool firstMouse = true;
+
+float moveSpeed = 5.0f;
+float mouseSensitivity = 0.1f;
+
 
 static std::string readTextFile(const char* path)
 {
@@ -88,6 +104,7 @@ void main(int argc, char** argv)
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
+    glutPassiveMotionFunc(MouseMotion);
 
     glutMainLoop();
 }
@@ -247,12 +264,43 @@ GLvoid InitCubeMesh()
     glBindVertexArray(0);
 }
 
+void MouseMotion(int x, int y)
+{
+    if (firstMouse)
+    {
+        lastX = (float)x;
+        lastY = (float)y;
+        firstMouse = false;
+    }
+
+    float offsetX = (float)x - lastX;
+    float offsetY = lastY - (float)y; 
+    lastX = (float)x;
+    lastY = (float)y;
+
+    offsetX *= mouseSensitivity;
+    offsetY *= mouseSensitivity;
+
+    yaw += offsetX;
+    pitch += offsetY;
+
+    if (pitch > 89.0f)  pitch = 89.0f;
+    if (pitch < -89.0f) pitch = -89.0f;
+
+    glm::vec3 dir;
+    dir.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    dir.y = sin(glm::radians(pitch));
+    dir.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    camFront = glm::normalize(dir);
+}
+
+
 GLvoid InitGL()
 {
     glClearColor(1.f, 1.f, 1.f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+    glutSetCursor(GLUT_CURSOR_NONE);
     InitCubeMesh();
 }
 
@@ -267,7 +315,7 @@ GLvoid drawScene()
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 1.0f, 0.0f));
 
-    glm::mat4 view = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
 
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
@@ -297,6 +345,16 @@ GLvoid Reshape(int w, int h)
 
 void Keyboard(unsigned char key, int x, int y)
 {
+    float delta = 0.1f; 
+    if (key == 'w')
+        camPos += camFront * delta;
+    if (key == 's')
+        camPos -= camFront * delta;
+    if (key == 'a')
+        camPos -= glm::normalize(glm::cross(camFront, camUp)) * delta;
+    if (key == 'd')
+        camPos += glm::normalize(glm::cross(camFront, camUp)) * delta;
+
     if (key == 27)
     {
         glutLeaveMainLoop();
