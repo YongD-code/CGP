@@ -1,8 +1,10 @@
 #include "Player.h"
+#include "Map.h"
 
 #include <gl/freeglut.h>
 #include <gl/glm/gtc/matrix_transform.hpp>
 #include <cmath>
+#include <vector>
 
 Player::Player()
 {
@@ -23,6 +25,9 @@ Player::Player()
     moveSpeed = 6.0f;
     mouseSensitivity = 0.1f;
     ignoreMouse = false;
+
+    eyeHeight = 1.0f;
+    playerRadius = 0.5f;
 
     for (int i = 0; i < 256; ++i)
     {
@@ -102,37 +107,101 @@ void Player::OnMouseMotion(int x, int y)
     glutWarpPointer(static_cast<int>(centerX), static_cast<int>(centerY));
 }
 
-glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt)
+glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt, const Map& map)
 {
-    float speed = moveSpeed * dt;
-    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
+    // 이동 방향 계산 (수평 방향만)
+    glm::vec3 forwardXZ = glm::vec3(camFront.x, 0.0f, camFront.z);
+    if (glm::length(forwardXZ) > 0.0001f)
+    {
+        forwardXZ = glm::normalize(forwardXZ);
+    }
 
-    if (keyState['w'] || keyState['W'])
+    glm::vec3 rightXZ = glm::normalize(glm::cross(forwardXZ, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    glm::vec3 moveDir(0.0f);
+
+    if (keyState['w'])
     {
-        camPos += camFront * speed;
+        moveDir += forwardXZ;
     }
-    if (keyState['s'] || keyState['S'])
+    if (keyState['s'])
     {
-        camPos -= camFront * speed;
+        moveDir -= forwardXZ;
     }
-    if (keyState['a'] || keyState['A'])
+    if (keyState['d'])
     {
-        camPos -= right * speed;
+        moveDir += rightXZ;
     }
-    if (keyState['d'] || keyState['D'])
+    if (keyState['a'])
     {
-        camPos += right * speed;
+        moveDir -= rightXZ;
     }
+
+    if (glm::length(moveDir) > 0.0001f)
+    {
+        moveDir = glm::normalize(moveDir);
+    }
+
+    glm::vec3 newPos = camPos;
+
+    // XZ평면 이동, 충돌 체크
+    if (glm::length(moveDir) > 0.0f)
+    {
+        float speed = moveSpeed * dt;
+
+        // X 방향 먼저
+        glm::vec3 cand = newPos;
+        cand.x += moveDir.x * speed;
+        if (!CheckCollisionXZ(cand, map))
+        {
+            newPos.x = cand.x;
+        }
+
+        // Z 방향 다음
+        cand = newPos;
+        cand.z += moveDir.z * speed;
+        if (!CheckCollisionXZ(cand, map))
+        {
+            newPos.z = cand.z;
+        }
+    }
+
+    // 일정 y값 유지
+    newPos.y = eyeHeight;
+    camPos = newPos;
 
     return glm::lookAt(camPos, camPos + camFront, camUp);
 }
 
-glm::vec3 Player::GetPosition() const
+bool Player::CheckCollisionXZ(const glm::vec3& testPos, const Map& map) const
 {
-    return camPos;
-}
+    const std::vector<Box>& boxes = map.GetBoxes();
 
-glm::vec3 Player::GetFront() const
-{
-    return camFront;
+    for (const Box& b : boxes)
+    {
+        glm::vec3 half = b.size * 0.5f;
+        glm::vec3 minB = b.pos - half;
+        glm::vec3 maxB = b.pos + half;
+
+        // y값 너무 멀면 충돌 무시 (천장)
+        float y = testPos.y;
+        if (y < minB.y || y > maxB.y)
+        {
+            continue;
+        }
+
+        // AABB로 충돌처리
+        float pxMin = testPos.x - playerRadius;
+        float pxMax = testPos.x + playerRadius;
+        float pzMin = testPos.z - playerRadius;
+        float pzMax = testPos.z + playerRadius;
+
+        if (pxMax <= minB.x || pxMin >= maxB.x) continue;
+        if (pzMax <= minB.z || pzMin >= maxB.z) continue;
+
+        // 여기까지 왔으면 XZ AABB가 겹침 → 충돌
+        return true;
+    }
+
+    return false;
 }
