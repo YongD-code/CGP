@@ -305,7 +305,7 @@ GLvoid drawScene()
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    glm::mat4 view = g_player.UpdateMoveAndGetViewMatrix(deltaTime);
+    glm::mat4 view = g_player.UpdateMoveAndGetViewMatrix(deltaTime, g_map);
 
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
