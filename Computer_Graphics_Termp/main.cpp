@@ -57,7 +57,7 @@ bool firstMouse = true;
 
 float moveSpeed = 5.0f;
 float mouseSensitivity = 0.1f;
-
+bool cull = false;
 
 static std::string readTextFile(const char* path)
 {
@@ -82,7 +82,7 @@ void main(int argc, char** argv)
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(width, height);
     glutCreateWindow("LIDAR Project - Step 0 (Cube + Normal)");
-
+    glDisable(GL_CULL_FACE);
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
@@ -230,17 +230,17 @@ GLvoid InitCubeMesh()
     unsigned int indices[] =
     {
         // 뒤
-        0, 1, 2,   2, 3, 0,
+        1, 0, 3,   3, 2, 1,
         // 앞
         4, 5, 6,   6, 7, 4,
         // 왼
-        8, 9,10,  10,11, 8,
+        11, 10, 9,   9, 8, 11,
         // 오른
         12,13,14,  14,15,12,
         // 아래
         16,17,18,  18,19,16,
         // 위
-        20,21,22,  22,23,20
+        20,23,22,  22,21,20
     };
 
     glGenVertexArrays(1, &VAO_cube);
@@ -354,7 +354,15 @@ void Keyboard(unsigned char key, int x, int y)
         camPos -= glm::normalize(glm::cross(camFront, camUp)) * delta;
     if (key == 'd')
         camPos += glm::normalize(glm::cross(camFront, camUp)) * delta;
-
+    if (key == 'h') {
+        cull = !cull;
+        if (cull) {
+            glEnable(GL_CULL_FACE);
+        }
+        else {
+            glDisable(GL_CULL_FACE);
+        }
+    }
     if (key == 27)
     {
         glutLeaveMainLoop();
