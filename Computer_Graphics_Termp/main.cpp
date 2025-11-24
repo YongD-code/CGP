@@ -14,6 +14,7 @@
 #include <gl/glm/gtc/type_ptr.hpp>
 
 #include "Player.h"
+#include "Map.h"
 
 using std::cout;
 using std::endl;
@@ -29,7 +30,6 @@ GLvoid InitGL();
 GLvoid InitCubeMesh();
 void KeyUp(unsigned char key, int x, int y);
 void KeyDown(unsigned char key, int x, int y);
-void updateMovement(float dt);
 void MouseMotion(int x, int y);
 
 GLuint width = 800, height = 600;
@@ -49,6 +49,7 @@ GLint uColorLoc = -1;
 bool cull = false;
 int lastTime = 0;
 Player g_player;
+Map g_map;
 
 static std::string readTextFile(const char* path)
 {
@@ -272,6 +273,7 @@ GLvoid InitGL()
 
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     g_player.OnResize(width, height);
+    g_map.InitTestRoom();
 }
 
 GLvoid drawScene()
@@ -290,16 +292,7 @@ GLvoid drawScene()
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
 
-    glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-    glm::vec3 cubeColor = glm::vec3(0.f, 0.f, 0.f);
-    glUniform3fv(uColorLoc, 1, glm::value_ptr(cubeColor));
-
-    glBindVertexArray(VAO_cube);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, view, proj);
 
     glutSwapBuffers();
     glutPostRedisplay();
