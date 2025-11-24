@@ -89,32 +89,64 @@ void Map::Draw(
 void Map::InitFromArray(int w, int h, const int* data)
 {
     boxes.clear();
-    
-    // 한 칸당 사이즈
+
     float cellSize = 4.0f;
     float wallHeight = 4.0f;
+
+    // 마지막 행은 천장 유무 검사
+    int entranceRow = h - 1;
+    std::vector<bool> lastRowCeil(w, false);
+
+    for (int x = 0; x <= w - 3; ++x)
+    {
+        int i0 = entranceRow * w + x;
+        int i1 = entranceRow * w + (x + 1);
+        int i2 = entranceRow * w + (x + 2);
+
+        int v0 = data[i0];
+        int v1 = data[i1];
+        int v2 = data[i2];
+
+        if (v0 == 1 && v1 == 0 && v2 == 1)
+        {
+            // 1 0 1 이 연속으로 나오면 입구라는 뜻, 천장 존재
+            lastRowCeil[x] = true;
+            lastRowCeil[x + 1] = true;
+            lastRowCeil[x + 2] = true;
+        }
+    }
 
     for (int z = 0; z < h; ++z)
     {
         for (int x = 0; x < w; ++x)
         {
-            Box ceiling;
+            int idx = z * w + x;
+            int v = data[idx];
+
             float fx = (x - w / 2.0f) * cellSize + cellSize * 0.5f;
             float fz = (z - h / 2.0f) * cellSize + cellSize * 0.5f;
-            ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
-            ceiling.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
-            ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
-            boxes.push_back(ceiling);
 
-            int v = data[z * w + x];
-            if (v == 0) continue;   // 배열에서 1인 곳만 벽으로
+            if (v == 1)
+            {
+                Box wall;
+                wall.size = glm::vec3(cellSize, wallHeight, cellSize);
+                wall.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
+                wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                boxes.push_back(wall);
+            }
+            // 천장 만들지 말지
+            bool makeCeil = false;
+            if (z < h - 1) makeCeil = true; // 애초에 마지막 행이 아니면 항상 천장 존재
+            else makeCeil = lastRowCeil[x]; // 1 0 1 인지 검사, 아니면 초기값인 false 리턴
 
-            Box b;
-            b.size = glm::vec3(cellSize, wallHeight, cellSize);
-            b.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
-            b.color = glm::vec3(0.1f, 0.1f, 0.1f);
-
-            boxes.push_back(b);
+            if (makeCeil)
+            {
+                Box ceiling;
+                ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
+                ceiling.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
+                ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                boxes.push_back(ceiling);
+            }
         }
     }
 }
