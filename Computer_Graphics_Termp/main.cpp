@@ -273,7 +273,24 @@ GLvoid InitGL()
 
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     g_player.OnResize(width, height);
-    g_map.InitTestRoom();
+    const int mapW = 12;
+    const int mapH = 10;
+
+    int mapData[mapH][mapW] =
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,0,0,0,0,0,0,0,0,0,0,1},
+        {1,0,1,1,0,0,1,1,1,0,0,1},
+        {1,0,1,0,0,0,1,0,1,0,0,1},
+        {1,0,1,0,1,1,1,0,1,1,0,1},
+        {1,0,0,0,0,0,0,0,0,1,0,1},
+        {1,1,1,1,1,1,0,1,0,1,0,1},
+        {1,0,0,0,0,0,0,1,0,0,0,1},
+        {1,0,1,1,1,1,1,1,1,1,0,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1}
+    };
+
+    g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
 }
 
 GLvoid drawScene()
@@ -290,7 +307,7 @@ GLvoid drawScene()
     glm::mat4 view = g_player.UpdateMoveAndGetViewMatrix(deltaTime);
 
     float aspect = static_cast<float>(width) / static_cast<float>(height);
-    glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
 
     g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, view, proj);
 
