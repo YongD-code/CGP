@@ -13,7 +13,7 @@
 #include <gl/glm/gtc/matrix_transform.hpp>
 #include <gl/glm/gtc/type_ptr.hpp>
 
-// git test
+#include "Player.h"
 
 using std::cout;
 using std::endl;
@@ -46,25 +46,9 @@ GLint uViewLoc = -1;
 GLint uProjLoc = -1;
 GLint uColorLoc = -1;
 
-//카메라 전역변수 추가
-glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-float yaw = -90.0f;
-float pitch = 0.0f;
-float lastX = width / 2.0f;
-float lastY = height / 2.0f;
-bool firstMouse = true;
-
-float moveSpeed = 5.0f;
-float mouseSensitivity = 0.1f;
 bool cull = false;
-bool ignoreMouse = false;
-
-//키보드 관련 전역변수 추가
-bool keyState[256] = { false };
 int lastTime = 0;
+Player g_player;
 
 static std::string readTextFile(const char* path)
 {
@@ -275,50 +259,8 @@ GLvoid InitCubeMesh()
 
 void MouseMotion(int x, int y)
 {
-    float centerX = width / 2.0f;
-    float centerY = height / 2.0f;
-
-    if (ignoreMouse)
-    {
-        ignoreMouse = false;
-        lastX = x;
-        lastY = y;
-        return;
-    }
-
-    if (firstMouse)
-    {
-        lastX = x;
-        lastY = y;
-        firstMouse = false;
-    }
-
-    float offsetX = x - lastX;
-    float offsetY = lastY - y;
-
-    lastX = x;
-    lastY = y;
-
-    offsetX *= mouseSensitivity;
-    offsetY *= mouseSensitivity;
-
-    yaw += offsetX;
-    pitch += offsetY;
-
-    if (pitch > 89.0f)  pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
-
-    glm::vec3 dir;
-    dir.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    dir.y = sin(glm::radians(pitch));
-    dir.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    camFront = glm::normalize(dir);
-
-    ignoreMouse = true;
-    glutWarpPointer((int)centerX, (int)centerY);
+    g_player.OnMouseMotion(x, y);
 }
-
-
 
 GLvoid InitGL()
 {
@@ -327,6 +269,9 @@ GLvoid InitGL()
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glutSetCursor(GLUT_CURSOR_NONE);
     InitCubeMesh();
+
+    lastTime = glutGet(GLUT_ELAPSED_TIME);
+    g_player.OnResize(width, height);
 }
 
 GLvoid drawScene()
@@ -335,18 +280,12 @@ GLvoid drawScene()
     float deltaTime = (now - lastTime) * 0.001f;
     lastTime = now;
 
-    updateMovement(deltaTime);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glUseProgram(shaderProgramID);
 
-    static float angle = 0.0f;
-
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 1.0f, 0.0f));
 
-    glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
+    glm::mat4 view = g_player.UpdateMoveAndGetViewMatrix(deltaTime);
 
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
@@ -371,34 +310,24 @@ GLvoid Reshape(int w, int h)
     width = w;
     height = h;
     glViewport(0, 0, w, h);
+    g_player.OnResize(w, h);
+
     glutPostRedisplay();
 }
 
 void KeyDown(unsigned char key, int x, int y)
 {
-    keyState[key] = true;
-
     if (key == 'h') {
         cull = !cull;
         if (cull) glEnable(GL_CULL_FACE);
         else glDisable(GL_CULL_FACE);
     }
-
     if (key == 27) glutLeaveMainLoop();
+
+    g_player.OnKeyDown(key);
 }
 
 void KeyUp(unsigned char key, int x, int y)
 {
-    keyState[key] = false;
-}
-
-void updateMovement(float dt)
-{
-    float speed = 3.0f * dt;
-    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
-
-    if (keyState['w']) camPos += camFront * speed;
-    if (keyState['s']) camPos -= camFront * speed;
-    if (keyState['a']) camPos -= right * speed;
-    if (keyState['d']) camPos += right * speed;
+    g_player.OnKeyUp(key);
 }
