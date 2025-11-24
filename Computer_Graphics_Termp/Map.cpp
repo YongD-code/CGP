@@ -98,14 +98,19 @@ void Map::InitFromArray(int w, int h, const int* data)
     {
         for (int x = 0; x < w; ++x)
         {
+            Box ceiling;
+            float fx = (x - w / 2.0f) * cellSize + cellSize * 0.5f;
+            float fz = (z - h / 2.0f) * cellSize + cellSize * 0.5f;
+            ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
+            ceiling.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
+            ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+            boxes.push_back(ceiling);
+
             int v = data[z * w + x];
             if (v == 0) continue;   // 배열에서 1인 곳만 벽으로
 
             Box b;
             b.size = glm::vec3(cellSize, wallHeight, cellSize);
-
-            float fx = (x - w / 2.0f) * cellSize + cellSize * 0.5f;
-            float fz = (z - h / 2.0f) * cellSize + cellSize * 0.5f;
             b.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
             b.color = glm::vec3(0.1f, 0.1f, 0.1f);
 
