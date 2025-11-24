@@ -102,7 +102,7 @@ void Player::OnMouseMotion(int x, int y)
     glutWarpPointer(static_cast<int>(centerX), static_cast<int>(centerY));
 }
 
-glm::mat4 Player::UpdateAndGetViewMatrix(float dt)
+glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt)
 {
     float speed = moveSpeed * dt;
     glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));

@@ -17,7 +17,7 @@ public:
     void OnMouseMotion(int x, int y);
 
     // 매 프레임 호출: 위치 업데이트 + view 행렬 반환
-    glm::mat4 UpdateAndGetViewMatrix(float dt);
+    glm::mat4 UpdateMoveAndGetViewMatrix(float dt);
 
     // 필요하면 위치/방향 얻기
     glm::vec3 GetPosition() const;
