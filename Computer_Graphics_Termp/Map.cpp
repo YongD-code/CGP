@@ -21,6 +21,13 @@ void Map::InitTestRoom()
     float wallThickness = 0.5f;
     float roomHalfSize = 5.0f;
 
+    // 천장
+    Box ceiling;
+    ceiling.pos = glm::vec3(0.0f, wallHeight, 0.0f);
+    ceiling.size = glm::vec3(10.0f, 1.0f, 10.0f);
+    ceiling.color = glm::vec3(0.f, 0.f, 0.f);
+    boxes.push_back(ceiling);
+
     // 앞쪽 벽 (z = -roomHalfSize)
     Box wallFront;
     wallFront.pos = glm::vec3(0.0f, wallHeight * 0.5f - 0.5f, -roomHalfSize);
@@ -44,13 +51,6 @@ void Map::InitTestRoom()
     Box wallRight = wallLeft;
     wallRight.pos.x = roomHalfSize;
     boxes.push_back(wallRight);
-
-    //// 안쪽 기둥 하나
-    //Box pillar;
-    //pillar.pos = glm::vec3(2.0f, 1.0f, 2.0f);
-    //pillar.size = glm::vec3(1.0f, 3.0f, 1.0f);
-    //pillar.color = glm::vec3(0.7f, 0.5f, 0.2f);
-    //boxes.push_back(pillar);
 }
 
 void Map::Draw(
