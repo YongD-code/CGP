@@ -27,7 +27,9 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 GLvoid InitGL();
 GLvoid InitCubeMesh();
-void   Keyboard(unsigned char key, int x, int y);
+void KeyUp(unsigned char key, int x, int y);
+void KeyDown(unsigned char key, int x, int y);
+void updateMovement(float dt);
 void MouseMotion(int x, int y);
 
 GLuint width = 800, height = 600;
@@ -60,6 +62,9 @@ float mouseSensitivity = 0.1f;
 bool cull = false;
 bool ignoreMouse = false;
 
+//키보드 관련 전역변수 추가
+bool keyState[256] = { false };
+int lastTime = 0;
 
 static std::string readTextFile(const char* path)
 {
@@ -105,7 +110,9 @@ void main(int argc, char** argv)
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
-    glutKeyboardFunc(Keyboard);
+    glutKeyboardFunc(KeyDown);
+    glutKeyboardUpFunc(KeyUp);
+
     glutPassiveMotionFunc(MouseMotion);
 
     glutMainLoop();
@@ -324,6 +331,12 @@ GLvoid InitGL()
 
 GLvoid drawScene()
 {
+    int now = glutGet(GLUT_ELAPSED_TIME);
+    float deltaTime = (now - lastTime) * 0.001f;
+    lastTime = now;
+
+    updateMovement(deltaTime);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgramID);
@@ -361,30 +374,31 @@ GLvoid Reshape(int w, int h)
     glutPostRedisplay();
 }
 
-void Keyboard(unsigned char key, int x, int y)
+void KeyDown(unsigned char key, int x, int y)
 {
-    float delta = 0.1f; 
-    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
-    if (key == 'w')
-        camPos += camFront * delta;
-    if (key == 's')
-        camPos -= camFront * delta;
-    if (key == 'a')
-        camPos -= right * delta;
-    if (key == 'd')
-        camPos += right * delta;
+    keyState[key] = true;
 
     if (key == 'h') {
         cull = !cull;
-        if (cull) {
-            glEnable(GL_CULL_FACE);
-        }
-        else {
-            glDisable(GL_CULL_FACE);
-        }
+        if (cull) glEnable(GL_CULL_FACE);
+        else glDisable(GL_CULL_FACE);
     }
-    if (key == 27)
-    {
-        glutLeaveMainLoop();
-    }
+
+    if (key == 27) glutLeaveMainLoop();
+}
+
+void KeyUp(unsigned char key, int x, int y)
+{
+    keyState[key] = false;
+}
+
+void updateMovement(float dt)
+{
+    float speed = 3.0f * dt;
+    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
+
+    if (keyState['w']) camPos += camFront * speed;
+    if (keyState['s']) camPos -= camFront * speed;
+    if (keyState['a']) camPos -= right * speed;
+    if (keyState['d']) camPos += right * speed;
 }
