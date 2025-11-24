@@ -24,7 +24,7 @@ void Map::InitTestRoom()
 
     // √µ¿Â
     Box ceiling;
-    ceiling.pos = glm::vec3(0.0f, wallHeight, 0.0f);
+    ceiling.pos = glm::vec3(0.0f, wallHeight - wallThickness, 0.0f);
     ceiling.size = glm::vec3(roomSize, wallThickness * 2.f, roomSize);
     ceiling.color = glm::vec3(0.f, 0.f, 0.f);
     boxes.push_back(ceiling);
