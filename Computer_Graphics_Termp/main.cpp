@@ -47,6 +47,7 @@ GLint uProjLoc = -1;
 GLint uColorLoc = -1;
 
 bool cull = false;
+bool wire_mode = true;
 int lastTime = 0;
 Player g_player;
 Map g_map;
@@ -331,6 +332,11 @@ void KeyDown(unsigned char key, int x, int y)
         cull = !cull;
         if (cull) glEnable(GL_CULL_FACE);
         else glDisable(GL_CULL_FACE);
+    }
+    if (key == 'm') {
+        wire_mode = !wire_mode;
+        if (wire_mode)  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     if (key == 27) glutLeaveMainLoop();
 
