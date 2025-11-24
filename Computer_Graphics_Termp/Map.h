@@ -30,6 +30,9 @@ public:
         const glm::mat4& proj
     ) const;
 
+    // 2D 배열에따라 3D 맵을 렌더링하는 함수
+    void InitFromArray(int w, int h, const int* data);
+
 private:
     std::vector<Box> boxes;
 };

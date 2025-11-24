@@ -12,8 +12,8 @@ void Map::InitTestRoom()
     // 벽 공통 설정
     float wallHeight = 3.0f;
     float wallThickness = 0.5f;
-    float roomHalfSize = 5.0f;
-    float roomSize = 10.f;
+    float roomHalfSize = 50.f;
+    float roomSize = 100.f;
 
     // 바닥
     Box floor;
@@ -84,4 +84,32 @@ void Map::Draw(
     }
 
     glBindVertexArray(0);
+}
+
+void Map::InitFromArray(int w, int h, const int* data)
+{
+    boxes.clear();
+    
+    // 한 칸당 사이즈
+    float cellSize = 4.0f;
+    float wallHeight = 4.0f;
+
+    for (int z = 0; z < h; ++z)
+    {
+        for (int x = 0; x < w; ++x)
+        {
+            int v = data[z * w + x];
+            if (v == 0) continue;   // 배열에서 1인 곳만 벽으로
+
+            Box b;
+            b.size = glm::vec3(cellSize, wallHeight, cellSize);
+
+            float fx = (x - w / 2.0f) * cellSize + cellSize * 0.5f;
+            float fz = (z - h / 2.0f) * cellSize + cellSize * 0.5f;
+            b.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
+            b.color = glm::vec3(0.1f, 0.1f, 0.1f);
+
+            boxes.push_back(b);
+        }
+    }
 }
