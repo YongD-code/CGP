@@ -58,6 +58,8 @@ bool firstMouse = true;
 float moveSpeed = 5.0f;
 float mouseSensitivity = 0.1f;
 bool cull = false;
+bool ignoreMouse = false;
+
 
 static std::string readTextFile(const char* path)
 {
@@ -266,17 +268,29 @@ GLvoid InitCubeMesh()
 
 void MouseMotion(int x, int y)
 {
+    float centerX = width / 2.0f;
+    float centerY = height / 2.0f;
+
+    if (ignoreMouse)
+    {
+        ignoreMouse = false;
+        lastX = x;
+        lastY = y;
+        return;
+    }
+
     if (firstMouse)
     {
-        lastX = (float)x;
-        lastY = (float)y;
+        lastX = x;
+        lastY = y;
         firstMouse = false;
     }
 
-    float offsetX = (float)x - lastX;
-    float offsetY = lastY - (float)y; 
-    lastX = (float)x;
-    lastY = (float)y;
+    float offsetX = x - lastX;
+    float offsetY = lastY - y;
+
+    lastX = x;
+    lastY = y;
 
     offsetX *= mouseSensitivity;
     offsetY *= mouseSensitivity;
@@ -292,7 +306,11 @@ void MouseMotion(int x, int y)
     dir.y = sin(glm::radians(pitch));
     dir.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     camFront = glm::normalize(dir);
+
+    ignoreMouse = true;
+    glutWarpPointer((int)centerX, (int)centerY);
 }
+
 
 
 GLvoid InitGL()
@@ -346,14 +364,16 @@ GLvoid Reshape(int w, int h)
 void Keyboard(unsigned char key, int x, int y)
 {
     float delta = 0.1f; 
+    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
     if (key == 'w')
         camPos += camFront * delta;
     if (key == 's')
         camPos -= camFront * delta;
     if (key == 'a')
-        camPos -= glm::normalize(glm::cross(camFront, camUp)) * delta;
+        camPos -= right * delta;
     if (key == 'd')
-        camPos += glm::normalize(glm::cross(camFront, camUp)) * delta;
+        camPos += right * delta;
+
     if (key == 'h') {
         cull = !cull;
         if (cull) {
