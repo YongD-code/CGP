@@ -9,29 +9,30 @@ void Map::InitTestRoom()
 {
     boxes.clear();
 
-    // 바닥
-    Box floor;
-    floor.pos = glm::vec3(0.0f, -0.5f, 0.0f);
-    floor.size = glm::vec3(10.0f, 1.0f, 10.0f);
-    floor.color = glm::vec3(0.f, 0.f, 0.f);
-    boxes.push_back(floor);
-
     // 벽 공통 설정
     float wallHeight = 3.0f;
     float wallThickness = 0.5f;
     float roomHalfSize = 5.0f;
+    float roomSize = 10.f;
+
+    // 바닥
+    Box floor;
+    floor.pos = glm::vec3(0.0f, -wallThickness, 0.0f);
+    floor.size = glm::vec3(roomSize, wallThickness * 2.f, roomSize);
+    floor.color = glm::vec3(0.f, 0.f, 0.f);
+    boxes.push_back(floor);
 
     // 천장
     Box ceiling;
     ceiling.pos = glm::vec3(0.0f, wallHeight, 0.0f);
-    ceiling.size = glm::vec3(10.0f, 1.0f, 10.0f);
+    ceiling.size = glm::vec3(roomSize, wallThickness * 2.f, roomSize);
     ceiling.color = glm::vec3(0.f, 0.f, 0.f);
     boxes.push_back(ceiling);
 
     // 앞쪽 벽 (z = -roomHalfSize)
     Box wallFront;
-    wallFront.pos = glm::vec3(0.0f, wallHeight * 0.5f - 0.5f, -roomHalfSize);
-    wallFront.size = glm::vec3(10.0f, wallHeight, wallThickness);
+    wallFront.pos = glm::vec3(0.0f, wallHeight * 0.5f - wallThickness, -roomHalfSize);
+    wallFront.size = glm::vec3(roomSize, wallHeight, wallThickness);
     wallFront.color = glm::vec3(0.f, 0.f, 0.f);
     boxes.push_back(wallFront);
 
@@ -42,8 +43,8 @@ void Map::InitTestRoom()
 
     // 왼쪽 벽 (x = -roomHalfSize)
     Box wallLeft;
-    wallLeft.pos = glm::vec3(-roomHalfSize, wallHeight * 0.5f - 0.5f, 0.0f);
-    wallLeft.size = glm::vec3(wallThickness, wallHeight, 10.0f);
+    wallLeft.pos = glm::vec3(-roomHalfSize, wallHeight * 0.5f - wallThickness, 0.0f);
+    wallLeft.size = glm::vec3(wallThickness, wallHeight, roomSize);
     wallLeft.color = glm::vec3(0.f, 0.f, 0.f);
     boxes.push_back(wallLeft);
 
