@@ -15,6 +15,8 @@
 
 #include "Player.h"
 #include "Map.h"
+#include "gunrender.h"
+#include "tiny_obj_loader.h"
 
 using std::cout;
 using std::endl;
