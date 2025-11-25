@@ -31,12 +31,12 @@ public:
     {
         return camFront;
     }
-
-private:
+public:
     glm::vec3 camPos;
     glm::vec3 camFront;
     glm::vec3 camUp;
 
+private:
     float yaw;
     float pitch;
 

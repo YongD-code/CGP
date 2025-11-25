@@ -53,6 +53,7 @@ bool wire_mode = true;
 int lastTime = 0;
 Player g_player;
 Map g_map;
+GunRenderer g_gun;
 
 static std::string readTextFile(const char* path)
 {
@@ -294,6 +295,7 @@ GLvoid InitGL()
     };
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
+    g_gun.Load("Gun.obj");
 }
 
 GLvoid drawScene()
@@ -313,6 +315,13 @@ GLvoid drawScene()
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
 
     g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, view, proj);
+
+    g_gun.Draw(shaderProgramID,
+        uModelLoc, uViewLoc, uProjLoc, uColorLoc,
+        view, proj,
+        g_player.camPos,
+        g_player.camFront,
+        g_player.camUp);
 
     glutSwapBuffers();
     glutPostRedisplay();
