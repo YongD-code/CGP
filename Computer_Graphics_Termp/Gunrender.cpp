@@ -82,39 +82,23 @@ void GunRenderer::Draw(GLuint shaderProgram,
 {
     glUseProgram(shaderProgram);
 
-    // FPS 무기 특징:
-    // 카메라 View 행렬의 회전 성분만 따고, 위치는 무시한다.
-    glm::mat4 camRot = glm::mat4(glm::mat3(view)); // view의 rotation만 추출
-    glm::mat4 invCamRot = glm::inverse(camRot);    // 카메라 회전 따라가기
+    // 카메라 회전만 추출
+    glm::mat4 rot = glm::lookAt(glm::vec3(0, 0, 0), camFront, camUp);
+    rot = glm::inverse(rot);
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    // 1) 무기 기본 위치: 카메라 기준 오른쪽/아래/앞
-    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
+    model = glm::translate(model, camPos);
+    model *= rot;
 
-    glm::vec3 gunOffset =
-        right * 0.38f     // 오른쪽으로 이동
-        + camUp * -0.60f    // 아래로 이동
-        + camFront * 0.65f; // 화면 안쪽으로 밀기
+    model = glm::translate(model, glm::vec3(0.4f, -0.25f, -0.55f)); // 화면 우측 아래
+    model = glm::scale(model, glm::vec3(0.003f)); // 총 크기 조정
 
-    model = glm::translate(model, camPos + gunOffset);
-
-    // 2) 카메라 회전에 고정되도록 설정
-    model *= invCamRot;
-
-    // 3) OBJ 자체 회전 보정 (총이 옆으로 눕거나 뒤집히면 이 부분 조절)
-    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-    model = glm::rotate(model, glm::radians(-5.0f), glm::vec3(1, 0, 0)); // 살짝 위로 들어주는 보정
-
-    // 4) 크기 조절
-    model = glm::scale(model, glm::vec3(0.0035f));
-
-    // Shader 전달
     glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-    glm::vec3 gunColor(0.15f, 0.15f, 0.15f);
+    glm::vec3 gunColor(0.1f, 0.1f, 0.1f);
     glUniform3fv(uColorLoc, 1, glm::value_ptr(gunColor));
 
     glBindVertexArray(vao);
