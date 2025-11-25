@@ -91,7 +91,9 @@ void GunRenderer::Draw(GLuint shaderProgram,
     model = glm::translate(model, camPos);
     model *= rot;
 
-    model = glm::translate(model, glm::vec3(0.4f, -0.25f, -0.55f)); // 화면 우측 아래
+    model = glm::translate(model, glm::vec3(0.4f, -0.7f, -0.85f)); // 화면 우측 아래
+    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    model = glm::rotate(model, glm::radians(-5.0f), glm::vec3(1, 0, 0));
     model = glm::scale(model, glm::vec3(0.003f)); // 총 크기 조정
 
     glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
