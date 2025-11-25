@@ -98,8 +98,12 @@ void GunRenderer::Draw(GLuint shaderProgram,
     glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-    glm::vec3 gunColor(0.1f, 0.1f, 0.1f);
-    glUniform3fv(uColorLoc, 1, glm::value_ptr(gunColor));
+    glm::vec3 lightPos = camPos + camFront * 2.0f + camUp * 1.0f;
+    glUniform3fv(glGetUniformLocation(shaderProgram, "lightPos"), 1, glm::value_ptr(lightPos));
+    glUniform3fv(glGetUniformLocation(shaderProgram, "viewPos"), 1, glm::value_ptr(camPos));
+
+    glm::vec3 gunColor(0.25f, 0.25f, 0.25f);
+    glUniform3fv(glGetUniformLocation(shaderProgram, "objectColor"), 1, glm::value_ptr(gunColor));
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
