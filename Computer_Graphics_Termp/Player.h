@@ -31,6 +31,12 @@ public:
     {
         return camFront;
     }
+
+    glm::vec3 GetCamRight() const
+    {
+        return glm::normalize(glm::cross(camFront, camUp));
+    }
+
 public:
     glm::vec3 camPos;
     glm::vec3 camFront;
