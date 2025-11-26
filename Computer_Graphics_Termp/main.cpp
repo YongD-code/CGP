@@ -278,7 +278,7 @@ GLvoid InitGL()
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     g_player.OnResize(width, height);
     const int mapW = 12;
-    const int mapH = 10;
+    const int mapH = 14;
 
     int mapData[mapH][mapW] =
     {
@@ -291,7 +291,12 @@ GLvoid InitGL()
         {1,1,1,1,1,1,0,1,0,1,0,1},
         {1,0,0,0,0,0,0,1,0,0,0,1},
         {1,1,1,1,1,1,0,1,1,1,1,1},
-        {0,0,0,0,0,1,0,1,0,0,0,0}
+        {0,0,0,0,0,1,0,1,0,0,0,0},
+        {0,0,0,0,0,1,0,1,0,0,0,0},
+        {0,0,0,0,1,0,0,0,1,0,0,0},
+        {0,0,0,0,1,0,0,0,1,0,0,0},
+        {0,0,0,0,1,1,1,1,1,0,0,0},
+
     };
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);

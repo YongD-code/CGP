@@ -93,9 +93,8 @@ void Map::InitFromArray(int w, int h, const int* data)
     float cellSize = 4.0f;
     float wallHeight = 4.0f;
 
-    // 마지막 행은 천장 유무 검사
-    int entranceRow = h - 1;
-    std::vector<bool> lastRowCeil(w, false);
+    int entranceRow = h - 4;
+    std::vector<bool> entranceCeil(w, false);
 
     for (int x = 0; x <= w - 3; ++x)
     {
@@ -109,10 +108,7 @@ void Map::InitFromArray(int w, int h, const int* data)
 
         if (v0 == 1 && v1 == 0 && v2 == 1)
         {
-            // 1 0 1 이 연속으로 나오면 입구라는 뜻, 천장 존재
-            lastRowCeil[x] = true;
-            lastRowCeil[x + 1] = true;
-            lastRowCeil[x + 2] = true;
+            entranceCeil[x + 1] = true;
         }
     }
 
@@ -133,11 +129,19 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
                 wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
                 boxes.push_back(wall);
+
+                wall.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
+                boxes.push_back(wall);
             }
             // 천장 만들지 말지
             bool makeCeil = false;
-            if (z < h - 1) makeCeil = true; // 애초에 마지막 행이 아니면 항상 천장 존재
-            else makeCeil = lastRowCeil[x]; // 1 0 1 인지 검사, 아니면 초기값인 false 리턴
+            if (z == entranceRow) makeCeil = entranceCeil[x];
+
+            Box ceiling;
+            ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
+            ceiling.pos = glm::vec3(fx, wallHeight * 2.5f - 0.5f, fz);
+            ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+            boxes.push_back(ceiling);
 
             if (makeCeil)
             {

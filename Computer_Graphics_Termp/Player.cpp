@@ -8,7 +8,7 @@
 
 Player::Player()
 {
-    camPos = glm::vec3(2.5f, 0.0f, 25.0f);
+    camPos = glm::vec3(2.5f, 0.0f, 20.0f);
     camFront = glm::vec3(0.0f, 0.0f, -1.0f);
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -26,7 +26,7 @@ Player::Player()
     mouseSensitivity = 0.1f;
     ignoreMouse = false;
 
-    eyeHeight = 1.0f;
+    eyeHeight = 1.f;
     playerRadius = 0.5f;
 
     for (int i = 0; i < 256; ++i)
