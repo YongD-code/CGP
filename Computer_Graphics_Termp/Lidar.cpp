@@ -145,19 +145,32 @@ void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& 
     glm::vec3 up = glm::normalize(glm::cross(right, forward));
 
     // 스캔 영역 크기 / 해상도
-    const int   steps = 5;                       // 5 x 5 = 25개 레이
-    const float halfAngle = glm::radians(2.0f);      // ±2도 정도 크기
-    const float tanA = std::tan(halfAngle);
+    const int   steps = 5;
+    const float halfAngle = glm::radians(1.0f);
+    const float radius = std::tan(halfAngle);
 
     for (int iy = 0; iy < steps; ++iy)
     {
-        float vy = (static_cast<float>(iy) / (steps - 1) - 0.5f); // -0.5 ~ 0.5
+        float ny = static_cast<float>(iy) / (steps - 1);
+        ny = ny * 2.0f - 1.0f;  // -1 ~ 1로 정규화
 
         for (int ix = 0; ix < steps; ++ix)
         {
-            float vx = (static_cast<float>(ix) / (steps - 1) - 0.5f); // -0.5 ~ 0.5
+            float nx = static_cast<float>(ix) / (steps - 1);
+            nx = nx * 2.0f - 1.0f;
 
-            glm::vec3 dir = forward + vx * tanA * right + vy * tanA * up;
+            float r2 = nx * nx + ny * ny;
+            if (r2 > 1.0f)
+            {
+                continue;   // 원 밖이면 스킵 → 사각형 격자 중 원 안만 사용
+            }
+
+            // nx, ny 는 이제 단위 원 안의 좌표
+            // 이걸 radius 만큼 스케일해서 forward 주변의 원만 렌더링
+            float offsetX = nx * radius;
+            float offsetY = ny * radius;
+
+            glm::vec3 dir = forward + offsetX * right + offsetY * up;
             dir = glm::normalize(dir);
             ScanSingleRay(origin, dir, map);
         }
