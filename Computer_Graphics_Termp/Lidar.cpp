@@ -213,6 +213,96 @@ void Lidar::ScanSingleRay(const glm::vec3& origin, const glm::vec3& dir, const M
     }
 }
 
+bool Lidar::Raycast(const glm::vec3& origin,
+    const glm::vec3& dir,
+    const std::vector<Box>& boxes,
+    float maxDist,
+    glm::vec3& hitPos)
+{
+    bool hit = false;
+    float closestT = maxDist;
+
+    for (const Box& b : boxes)
+    {
+        glm::vec3 half = b.size * 0.5f;
+        glm::vec3 minB = b.pos - half;
+        glm::vec3 maxB = b.pos + half;
+
+        float tmin = 0.0f;
+        float tmax = maxDist;
+
+        // x축
+        if (fabs(dir.x) > 0.0001f)
+        {
+            float tx1 = (minB.x - origin.x) / dir.x;
+            float tx2 = (maxB.x - origin.x) / dir.x;
+            tmin = std::max(tmin, std::min(tx1, tx2));
+            tmax = std::min(tmax, std::max(tx1, tx2));
+        }
+
+        // y축
+        if (fabs(dir.y) > 0.0001f)
+        {
+            float ty1 = (minB.y - origin.y) / dir.y;
+            float ty2 = (maxB.y - origin.y) / dir.y;
+            tmin = std::max(tmin, std::min(ty1, ty2));
+            tmax = std::min(tmax, std::max(ty1, ty2));
+        }
+
+        // z축
+        if (fabs(dir.z) > 0.0001f)
+        {
+            float tz1 = (minB.z - origin.z) / dir.z;
+            float tz2 = (maxB.z - origin.z) / dir.z;
+            tmin = std::max(tmin, std::min(tz1, tz2));
+            tmax = std::min(tmax, std::max(tz1, tz2));
+        }
+
+        if (tmax >= tmin && tmin < closestT)
+        {
+            closestT = tmin;
+            hit = true;
+        }
+    }
+
+    if (hit)
+    {
+        hitPos = origin + dir * closestT;
+    }
+
+    return hit;
+}
+
+
+void Lidar::ScanFanWide(const glm::vec3& origin,
+    const glm::vec3& forward,
+    const glm::vec3& up,
+    const std::vector<Box>& boxes)
+{
+    points.clear(); // 기존 점 초기화 (또는 push_back만 하고 싶으면 지우지 않아도 됨)
+
+    float fov = glm::radians(70.0f);    // 좌우로 총 70도
+    int numRays = 300;                  // 발사할 레이 수
+    float maxDist = 50.0f;              // 스캔 최대 거리
+
+    glm::vec3 right = glm::normalize(glm::cross(forward, up));
+
+    for (int i = 0; i < numRays; i++)
+    {
+        float t = (float)i / (float)(numRays - 1);  // 0 ~ 1
+        float angle = (t - 0.5f) * fov;             // -fov/2 ~ +fov/2
+
+        glm::vec3 dir =
+            glm::normalize(forward * cos(angle) + right * sin(angle));
+
+        glm::vec3 hit;
+        if (Raycast(origin, dir, boxes, maxDist, hit))
+        {
+            points.push_back(hit);
+        }
+    }
+}
+
 void Lidar::Draw(GLuint shaderProgram,
     GLint uModelLoc,
     GLint uViewLoc,

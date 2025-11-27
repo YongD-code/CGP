@@ -5,7 +5,7 @@
 
 #include <gl/glew.h>
 #include <gl/glm/glm.hpp>
-
+#include "Map.h"  
 class Map;
 
 class Lidar
@@ -13,7 +13,7 @@ class Lidar
 public:
     Lidar();
     ~Lidar();
-
+    std::vector<glm::vec3> points;
     // VAO / VBO 초기화
     void Init();
 
@@ -30,6 +30,17 @@ public:
         const glm::vec3& front,
         const Map& map);
 
+    bool Raycast(const glm::vec3& origin,
+        const glm::vec3& dir,
+        const std::vector<Box>& boxes,
+        float maxDist,
+        glm::vec3& hitPos);
+
+    void ScanFanWide(const glm::vec3& origin,
+        const glm::vec3& forward,
+        const glm::vec3& up,
+        const std::vector<Box>& boxes);
+
     // 저장된 포인트들을 GL_POINTS 로 렌더링
     void Draw(GLuint shaderProgram,
         GLint uModelLoc,
@@ -42,6 +53,6 @@ public:
 private:
     GLuint VAO;
     GLuint VBO;
-    std::vector<glm::vec3> points;
+
     std::size_t maxPoints;
 };

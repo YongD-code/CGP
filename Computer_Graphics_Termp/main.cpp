@@ -107,8 +107,8 @@ void main(int argc, char** argv)
     glutKeyboardFunc(KeyDown);
     glutKeyboardUpFunc(KeyUp);
 
-    glutPassiveMotionFunc(MouseMotion);
     glutMotionFunc(MouseMotion);
+    glutPassiveMotionFunc(MouseMotion);
     glutMouseFunc(MouseButton);
 
     glutMainLoop();
@@ -335,6 +335,14 @@ GLvoid drawScene()
         g_player.camFront,
         g_player.camUp);
 
+    glPointSize(4.0f);
+    glBegin(GL_POINTS);
+    for (auto& p : g_lidar.points)
+    {
+        glVertex3f(p.x, p.y, p.z);
+    }
+    glEnd();
+
     glutSwapBuffers();
     glutPostRedisplay();
 }
@@ -387,7 +395,16 @@ void MouseButton(int button, int state, int x, int y)
             g_isScanning = false;
         }
     }
+
+    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+    {
+        g_lidar.ScanFanWide(g_player.camPos,
+            g_player.camFront,
+            g_player.camUp,
+            g_map.GetBoxes());
+    }
 }
+
 
 void MouseMotion(int x, int y)
 {
