@@ -1,4 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -342,7 +343,7 @@ GLvoid drawScene()
         glVertex3f(p.x, p.y, p.z);
     }
     glEnd();
-
+    g_lidar.UpdateScan();
     glutSwapBuffers();
     glutPostRedisplay();
 }
@@ -398,10 +399,12 @@ void MouseButton(int button, int state, int x, int y)
 
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
-        g_lidar.ScanFanWide(g_player.camPos,
+        g_lidar.StartScan(
+            g_player.camPos,
             g_player.camFront,
             g_player.camUp,
-            g_map.GetBoxes());
+            g_map.GetBoxes()
+        );
     }
 }
 
