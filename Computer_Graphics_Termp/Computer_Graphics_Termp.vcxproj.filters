@@ -24,12 +24,30 @@
     <ClCompile Include="Map.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Gunrender.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="tiny_obj_loader.cc">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Lidar.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Map.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="gunrender.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Lidar.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

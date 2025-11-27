@@ -17,6 +17,7 @@
 #include "Map.h"
 #include "gunrender.h"
 #include "tiny_obj_loader.h"
+#include "Lidar.h"
 
 using std::cout;
 using std::endl;
@@ -33,6 +34,7 @@ GLvoid InitCubeMesh();
 void KeyUp(unsigned char key, int x, int y);
 void KeyDown(unsigned char key, int x, int y);
 void MouseMotion(int x, int y);
+void MouseButton(int button, int state, int x, int y);
 
 GLuint width = 800, height = 600;
 GLuint shaderProgramID = 0;
@@ -53,7 +55,10 @@ bool wire_mode = true;
 int lastTime = 0;
 Player g_player;
 Map g_map;
+Lidar g_lidar;
 GunRenderer g_gun;
+
+bool g_isScanning = false;
 
 static std::string readTextFile(const char* path)
 {
@@ -103,6 +108,8 @@ void main(int argc, char** argv)
     glutKeyboardUpFunc(KeyUp);
 
     glutPassiveMotionFunc(MouseMotion);
+    glutMotionFunc(MouseMotion);
+    glutMouseFunc(MouseButton);
 
     glutMainLoop();
 }
@@ -262,11 +269,6 @@ GLvoid InitCubeMesh()
     glBindVertexArray(0);
 }
 
-void MouseMotion(int x, int y)
-{
-    g_player.OnMouseMotion(x, y);
-}
-
 GLvoid InitGL()
 {
     glClearColor(1.f, 1.f, 1.f, 1.0f);
@@ -301,6 +303,7 @@ GLvoid InitGL()
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
     g_gun.Load("Gun.obj");
+    g_lidar.Init();
 }
 
 GLvoid drawScene()
@@ -320,6 +323,10 @@ GLvoid drawScene()
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
 
     g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, view, proj);
+
+    g_lidar.Draw(shaderProgramID,
+        uModelLoc, uViewLoc, uProjLoc, uColorLoc,
+        view, proj);
 
     g_gun.Draw(shaderProgramID,
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
@@ -362,4 +369,34 @@ void KeyDown(unsigned char key, int x, int y)
 void KeyUp(unsigned char key, int x, int y)
 {
     g_player.OnKeyUp(key);
+}
+
+void MouseButton(int button, int state, int x, int y)
+{
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        if (state == GLUT_DOWN)
+        {
+            g_isScanning = true;
+            glm::vec3 origin = g_player.GetPosition();
+            glm::vec3 front = g_player.GetFront();
+            g_lidar.ScanFan(origin, front, g_map);
+        }
+        else if (state == GLUT_UP)
+        {
+            g_isScanning = false;
+        }
+    }
+}
+
+void MouseMotion(int x, int y)
+{
+    g_player.OnMouseMotion(x, y);
+
+    if (g_isScanning)
+    {
+        glm::vec3 origin = g_player.GetPosition();
+        glm::vec3 front = g_player.GetFront();
+        g_lidar.ScanFan(origin, front, g_map);
+    }
 }

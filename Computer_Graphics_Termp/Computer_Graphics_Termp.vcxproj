@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Gunrender.cpp" />
+    <ClCompile Include="Lidar.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gunrender.h" />
+    <ClInclude Include="Lidar.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="tiny_obj_loader.h" />
