@@ -11,7 +11,7 @@ struct ScanState {
     bool active = false;   // 스캔 중인지
     int curRow = 0;        // 현재 처리 중인 vertical index
     int horizontal = 80;   // 좌우 레이 수
-    int vertical = 60;     // 위아래 레이 수
+    int vertical = 80;     // 위아래 레이 수
     float hFov = glm::radians(30.0f);
     float vFov = glm::radians(30.0f);
     glm::vec3 origin;
@@ -50,11 +50,6 @@ public:
         const std::vector<Box>& boxes,
         float maxDist,
         glm::vec3& hitPos);
-
-    void ScanFanWide(const glm::vec3& origin,
-        const glm::vec3& forward,
-        const glm::vec3& up,
-        const std::vector<Box>& boxes);
 
     void StartScan(const glm::vec3& origin,
         const glm::vec3& front,

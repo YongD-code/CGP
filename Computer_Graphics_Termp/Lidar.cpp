@@ -215,10 +215,10 @@ void Lidar::StartScan(const glm::vec3& origin,
     scan.front = glm::normalize(front);
 
     glm::vec3 right = glm::normalize(glm::cross(scan.front, up));
-    if (glm::length(right) < 0.001f)
-        right = glm::normalize(glm::cross(scan.front, glm::vec3(1, 0, 0)));
+    if (glm::length(right) < 0.001f)    // front와 up이 거의 평행하면 외적 결과인 right가 0 근사값이 될 수도 있음
+        right = glm::normalize(glm::cross(scan.front, glm::vec3(1, 0, 0))); // 그러면 대체축을 통해서라도 right 계산
 
-    scan.up = glm::normalize(glm::cross(right, scan.front));
+    scan.up = glm::normalize(glm::cross(right, scan.front));    // 스캔에 쓰일 진짜 up 계산
     scan.boxes = boxes;
 }
 
@@ -237,11 +237,11 @@ void Lidar::UpdateScan()
     glm::vec3 up = scan.up;
     glm::vec3 right = glm::normalize(glm::cross(forward, up));
 
-    float vAngle = ((float)row / (scan.vertical - 1) - 0.5f) * scan.vFov;
+    float vAngle = ((float)row / (scan.vertical - 1) - 0.5f) * scan.vFov;   // row 인덱스를 각도로 매핑 -vFov/2 ~ +vFov/2
 
     for (int i = 0; i < scan.horizontal; i++)
     {
-        float hAngle = ((float)i / (scan.horizontal - 1) - 0.5f) * scan.hFov;
+        float hAngle = ((float)i / (scan.horizontal - 1) - 0.5f) * scan.hFov;   // 마찬가지
 
         glm::quat qPitch = glm::angleAxis(vAngle, right);
         glm::quat qYaw = glm::angleAxis(hAngle, up);
