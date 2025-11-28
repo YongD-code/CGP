@@ -20,19 +20,20 @@ struct ScanState {
     std::vector<Box> boxes;
 };
 
-class Map;
-
 class Lidar
 {
 public:
     Lidar();
     ~Lidar();
-    std::vector<glm::vec3> points;
     // VAO / VBO 초기화
     void Init();
 
     // 저장된 포인트 모두 삭제
-    void Clear();
+    void Clear() { points.clear(); }
+
+    const std::vector<glm::vec3>& GetPoints() const { return points; }
+    
+    size_t GetPointCount() const { return points.size(); }
 
     // origin 에서 dir 방향으로 레이 1개 쏘고,
     // Map 의 박스들과 가장 가까운 교차점을 저장
@@ -75,5 +76,9 @@ private:
     GLuint VAO;
     GLuint VBO;
     ScanState scan;
+
+    std::vector<glm::vec3> points;
     std::size_t maxPoints;
+
+    void AddHitPoint(const glm::vec3& p);
 };
