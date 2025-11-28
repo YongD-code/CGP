@@ -248,7 +248,7 @@ void Lidar::UpdateScan()
         glm::quat q = qYaw * qPitch;    // 하나의 쿼터니언으로 합침
 
         glm::vec3 dir = glm::normalize(q * forward);    // q * vector만 normalize에 넣어도 내부적으로 forward를 쿼터니언으로 바꾸고 q x p x q*을 해줌
-                                                        // ㅈㄴ 신기하네
+                                                        // 쿼터니언과 벡터를 곱하면 위의 연산을 해주는 operator*가 오버로드됨 ㄷㄷ
 
         glm::vec3 hit;
         if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit))
