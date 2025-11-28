@@ -209,7 +209,7 @@ void Lidar::StartScan(const glm::vec3& origin,
 {
 
     scan.active = true;
-    scan.curRow = 0;
+    scan.curRow = scan.vertical - 1;
 
     scan.origin = origin;
     scan.front = glm::normalize(front);
@@ -227,7 +227,7 @@ void Lidar::UpdateScan()
     if (!scan.active) return;
 
     int row = scan.curRow;
-    if (row >= scan.vertical)
+    if (row < 0)
     {
         scan.active = false;
         return;
@@ -243,18 +243,19 @@ void Lidar::UpdateScan()
     {
         float hAngle = ((float)i / (scan.horizontal - 1) - 0.5f) * scan.hFov;   // 마찬가지
 
-        glm::quat qPitch = glm::angleAxis(vAngle, right);
+        glm::quat qPitch = glm::angleAxis(vAngle, right);   // right를 축으로 하는 쿼터니언
         glm::quat qYaw = glm::angleAxis(hAngle, up);
-        glm::quat q = qYaw * qPitch;
+        glm::quat q = qYaw * qPitch;    // 하나의 쿼터니언으로 합침
 
-        glm::vec3 dir = glm::normalize(q * forward);
+        glm::vec3 dir = glm::normalize(q * forward);    // q * vector만 normalize에 넣어도 내부적으로 forward를 쿼터니언으로 바꾸고 q x p x q*을 해줌
+                                                        // ㅈㄴ 신기하네
 
         glm::vec3 hit;
         if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit))
             AddHitPoint(hit);
     }
 
-    scan.curRow++;   // 다음 줄로 넘어가기
+    scan.curRow--;   // 다음 줄로 넘어가기
 }
 
 
