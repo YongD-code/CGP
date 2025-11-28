@@ -338,7 +338,7 @@ GLvoid drawScene()
 
     glPointSize(4.0f);
     glBegin(GL_POINTS);
-    for (auto& p : g_lidar.points)
+    for (auto& p : g_lidar.GetPoints())
     {
         glVertex3f(p.x, p.y, p.z);
     }
