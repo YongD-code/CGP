@@ -51,10 +51,10 @@ void Lidar::AddHitPoint(const glm::vec3& p)
 {
     points.push_back(p);
 
-    //if (points.size() > maxPoints)
-    //{
-    //    points.erase(points.begin(), points.begin() + 1000);
-    //}
+    if (points.size() > maxPoints)
+    {
+        points.erase(points.begin(), points.begin() + maxPoints - 1);
+    }
 }
 
 void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& map)
@@ -201,42 +201,6 @@ bool Lidar::Raycast(
     hitPos = origin + dir * closestT;
     return true;
 }
-
-void Lidar::ScanFanWide(
-    const glm::vec3& origin,
-    const glm::vec3& front,
-    const glm::vec3& up,
-    const std::vector<Box>& boxes)
-{
-    const int horizontal = 60;  // 좌우 resolution
-    const int vertical = 40;    // 상하 resolution
-    const float maxDist = 40.0f;
-
-    // 사각형 크기 조절 (값을 줄이면 작아짐)
-    const float widthScale = 0.2f;  // 좌우 크기
-    const float heightScale = 0.2f; // 상하 크기
-
-    glm::vec3 right = glm::normalize(glm::cross(front, up));
-
-    for (int iy = 0; iy < vertical; iy++)
-    {
-        float y = ((float)iy / (vertical - 1) - 0.5f) * 2.0f * heightScale;
-
-        for (int ix = 0; ix < horizontal; ix++)
-        {
-            float x = ((float)ix / (horizontal - 1) - 0.5f) * 2.0f * widthScale;
-
-            glm::vec3 dir = glm::normalize(front + x * right + y * up);
-
-            glm::vec3 hit;
-            if (Raycast(origin, dir, boxes, maxDist, hit))
-            {
-                AddHitPoint(hit);
-            }
-        }
-    }
-}
-
 
 void Lidar::StartScan(const glm::vec3& origin,
     const glm::vec3& front,
