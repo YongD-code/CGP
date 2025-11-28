@@ -47,94 +47,14 @@ void Lidar::Init()
     glBindVertexArray(0);
 }
 
-void Lidar::Clear()
+void Lidar::AddHitPoint(const glm::vec3& p)
 {
-    points.clear();
-}
+    points.push_back(p);
 
-// 내부용: Ray - AABB(Box) 교차 테스트
-static bool RayAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const Box& box, float& tHit)
-{
-    glm::vec3 half = box.size * 0.5f;
-    glm::vec3 minB = box.pos - half;
-    glm::vec3 maxB = box.pos + half;
-
-    float tmin = -1.0e9f;
-    float tmax = 1.0e9f;
-
-    for (int axis = 0; axis < 3; ++axis)
-    {
-        // ray의 시작벡터, 방향벡터, 박스의 축마다 최소/최대값 (겜수에서 배웠던 그 방정식)
-        float originComponent;
-        float dirComponent;
-        float minComponent;
-        float maxComponent;
-
-        if (axis == 0)
-        {
-            originComponent = rayOrigin.x;
-            dirComponent = rayDir.x;
-            minComponent = minB.x;
-            maxComponent = maxB.x;
-        }
-        else if (axis == 1)
-        {
-            originComponent = rayOrigin.y;
-            dirComponent = rayDir.y;
-            minComponent = minB.y;
-            maxComponent = maxB.y;
-        }
-        else
-        {
-            originComponent = rayOrigin.z;
-            dirComponent = rayDir.z;
-            minComponent = minB.z;
-            maxComponent = maxB.z;
-        }
-
-        // 방향벡터의 기울기가 평행에 근사값이면
-        if (std::abs(dirComponent) < 1e-6f)
-        {
-            if (originComponent < minComponent || originComponent > maxComponent)   // 박스 밖에 있으면 교차 X
-            {
-                return false;
-            }
-        }
-        else
-        {
-            float ood = 1.0f / dirComponent;
-            float t1 = (minComponent - originComponent) * ood;  // P(t) = O + tD 에서 교차점인 t 계산 (반복문 돌면서 x, y, z 다 계산)
-            float t2 = (maxComponent - originComponent) * ood;
-
-            if (t1 > t2)    // 방향이 음수일 경우 t1 < t2 이므로 스왑
-            {
-                std::swap(t1, t2);
-            }
-
-            if (t1 > tmin)
-            {
-                tmin = t1;
-            }
-            if (t2 < tmax)
-            {
-                tmax = t2;
-            }
-
-            if (tmin > tmax)
-            {
-                return false;
-            }
-        }
-    }
-
-    // 전부 카메라 뒤쪽에 있는 경우
-    if (tmax < 0.0f)
-    {
-        return false;
-    }
-
-    tHit = (tmin >= 0.0f) ? tmin : tmax;
-    return true;
+    //if (points.size() > maxPoints)
+    //{
+    //    points.erase(points.begin(), points.begin() + 1000);
+    //}
 }
 
 void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& map)
@@ -185,33 +105,12 @@ void Lidar::ScanSingleRay(const glm::vec3& origin, const glm::vec3& dir, const M
 
     const std::vector<Box>& boxes = map.GetBoxes();
 
-    float closestT = 1.0e9f;
-    bool  hit = false;
-    glm::vec3 hitPos(0.0f);
+    glm::vec3 hitPos;
+    const float maxDist = 1000.0f;   // 맵 크기에 맞춰 나중에 조정 가능
 
-    for (const Box& b : boxes)
+    if (Raycast(origin, nDir, map.GetBoxes(), maxDist, hitPos))
     {
-        float t = 0.0f;
-        if (RayAABB(origin, nDir, b, t))
-        {
-            if (t < closestT)
-            {
-                closestT = t;
-                hitPos = origin + nDir * t;
-                hit = true;
-            }
-        }
-    }
-
-    if (hit)
-    {
-        points.push_back(hitPos);
-
-        if (points.size() > maxPoints)
-        {
-            //// 너무 많으면 앞부분 조금 잘라내기
-            //points.erase(points.begin(), points.begin() + 1000);
-        }
+        AddHitPoint(hitPos);
     }
 }
 
@@ -303,8 +202,6 @@ bool Lidar::Raycast(
     return true;
 }
 
-
-
 void Lidar::ScanFanWide(
     const glm::vec3& origin,
     const glm::vec3& front,
@@ -329,13 +226,12 @@ void Lidar::ScanFanWide(
         {
             float x = ((float)ix / (horizontal - 1) - 0.5f) * 2.0f * widthScale;
 
-            glm::vec3 dir =
-                glm::normalize(front + x * right + y * up);
+            glm::vec3 dir = glm::normalize(front + x * right + y * up);
 
             glm::vec3 hit;
             if (Raycast(origin, dir, boxes, maxDist, hit))
             {
-                points.push_back(hit);
+                AddHitPoint(hit);
             }
         }
     }
@@ -391,7 +287,7 @@ void Lidar::UpdateScan()
 
         glm::vec3 hit;
         if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit))
-            points.push_back(hit);
+            AddHitPoint(hit);
     }
 
     scan.curRow++;   // 다음 줄로 넘어가기
