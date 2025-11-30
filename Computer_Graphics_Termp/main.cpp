@@ -320,6 +320,7 @@ GLvoid InitGL()
     g_lidar.Init();
 }
 
+// 레이저 위치는 항상 갱신해야 화면이 확 돌아갔을때 레이저가 이상한 위치에 가있지 않음
 void StartScanBeam()
 {
     g_beam.active = true;
@@ -390,17 +391,21 @@ GLvoid drawScene()
         glm::vec3 camPos = g_player.camPos;
         glm::vec3 camFront = glm::normalize(g_player.camFront);
         glm::vec3 camUp = glm::normalize(g_player.camUp);
-        glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
+        
+        glm::mat4 rot = glm::lookAt(glm::vec3(0, 0, 0), camFront, camUp);
+        rot = glm::inverse(rot);
 
-        glm::vec3 gunBase = camPos
-            + camRight * 0.4f
-            - camUp * 1.2f
-            - camFront * 0.9f;
+        // 총의 translate 값
+        glm::mat4 m = glm::mat4(1.0f);
+        m = glm::translate(m, camPos);
+        m *= rot;
+        m = glm::translate(m, glm::vec3(0.45f, -0.25f, -0.8f));
 
-        glm::vec3 start = gunBase + camFront * 0.6f;
-        glm::vec3 dir = camFront;
+        // 총 모델의 원점이 월드에서 어디인지
+        glm::vec3 gunBase = glm::vec3(m * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-        glm::vec3 endPos = start + dir * g_beam.curLength;
+        glm::vec3 start = gunBase + camFront * 0.35f;
+        glm::vec3 endPos = start + camFront * g_beam.curLength;
 
         glm::mat4 modelBeam = glm::mat4(1.0f);
         glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(modelBeam));
