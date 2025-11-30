@@ -395,7 +395,8 @@ GLvoid drawScene()
         glm::mat4 rot = glm::lookAt(glm::vec3(0, 0, 0), camFront, camUp);
         rot = glm::inverse(rot);
 
-        // 총의 translate 값
+        // 총의 월드변환을 그대로 받아와서 해보려고 했는데 계속 이상하게 찍힘
+        // 그냥 숫자 노가다로 위치 맞춰놓음
         glm::mat4 m = glm::mat4(1.0f);
         m = glm::translate(m, camPos);
         m *= rot;
@@ -415,10 +416,19 @@ GLvoid drawScene()
         glm::vec3 beamColor(1.0f, 0.0f, 0.0f);
         glUniform3fv(uColorLoc, 1, glm::value_ptr(beamColor));
 
+        const vector<glm::vec3>& rays = g_lidar.GetDebugRays();
+
         glLineWidth(3.0f);
         glBegin(GL_LINES);
-        glVertex3f(start.x, start.y, start.z);
-        glVertex3f(endPos.x, endPos.y, endPos.z);
+        // 여러 개의 레이저 선
+        for (const glm::vec3& dir : rays)
+        {
+            glm::vec3 ndir = glm::normalize(dir);
+            glm::vec3 endPos = start + ndir * g_beam.curLength;
+
+            glVertex3f(start.x, start.y, start.z);
+            glVertex3f(endPos.x, endPos.y, endPos.z);
+        }
         glEnd();
         glLineWidth(1.0f);
     }

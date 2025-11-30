@@ -67,6 +67,16 @@ public:
         const glm::mat4& view,
         const glm::mat4& proj) const;
 
+    const std::vector<glm::vec3>& GetDebugRays() const
+    {
+        return debugRays;
+    }
+
+    void ClearDebugRays()
+    {
+        debugRays.clear();
+    }
+
 private:
     GLuint VAO;
     GLuint VBO;
@@ -74,6 +84,8 @@ private:
 
     std::vector<glm::vec3> points;
     std::size_t maxPoints;
+
+    std::vector<glm::vec3> debugRays;
 
     void AddHitPoint(const glm::vec3& p);
 };

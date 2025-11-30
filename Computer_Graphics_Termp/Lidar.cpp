@@ -59,6 +59,8 @@ void Lidar::AddHitPoint(const glm::vec3& p)
 
 void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& map)
 {
+    debugRays.clear();
+
     glm::vec3 forward = glm::normalize(front);
     glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
 
@@ -94,6 +96,8 @@ void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& 
 
             glm::vec3 dir = forward + offsetX * right + offsetY * up;
             dir = glm::normalize(dir);
+
+            debugRays.push_back(dir);
             ScanSingleRay(origin, dir, map);
         }
     }
@@ -220,6 +224,8 @@ void Lidar::StartScan(const glm::vec3& origin,
 
     scan.up = glm::normalize(glm::cross(right, scan.front));    // 스캔에 쓰일 진짜 up 계산
     scan.boxes = boxes;
+
+    debugRays.clear();
 }
 
 void Lidar::UpdateScan()
@@ -232,6 +238,8 @@ void Lidar::UpdateScan()
         scan.active = false;
         return;
     }
+
+    debugRays.clear();
 
     glm::vec3 forward = scan.front;
     glm::vec3 up = scan.up;
@@ -249,6 +257,7 @@ void Lidar::UpdateScan()
 
         glm::vec3 dir = glm::normalize(q * forward);    // q * vector만 normalize에 넣어도 내부적으로 forward를 쿼터니언으로 바꾸고 q x p x q*을 해줌
                                                         // 쿼터니언과 벡터를 곱하면 위의 연산을 해주는 operator*가 오버로드됨 ㄷㄷ
+        debugRays.push_back(dir);
 
         glm::vec3 hit;
         if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit))
