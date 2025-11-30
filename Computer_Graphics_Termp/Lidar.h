@@ -80,6 +80,11 @@ public:
         debugRays.clear();
     }
 
+    bool IsScanActive() const
+    {
+        return scan.active;
+    }
+
 private:
     GLuint VAO;
     GLuint VBO;

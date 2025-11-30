@@ -380,8 +380,10 @@ GLvoid drawScene()
                 g_beam.curLength = g_beam.maxLength;
             }
         }
+        // g_isScanning은 좌클릭용 bool이라서 우클릭 시에는 항상 꺼져있음. scan이 active인지 체크하는 함수 추가
+        bool anyScanActive = g_isScanning || g_lidar.IsScanActive();
 
-        if (!g_isScanning)
+        if (!anyScanActive)
         {
             g_beam.tailTime -= deltaTime;
             if (g_beam.tailTime <= 0.0f)
