@@ -12,8 +12,8 @@ struct ScanState {
     int curRow = 0;        // 현재 처리 중인 vertical index
     int horizontal = 80;   // 좌우 레이 수
     int vertical = 80;     // 위아래 레이 수
-    float hFov = glm::radians(30.0f);
-    float vFov = glm::radians(30.0f);
+    float hFov = glm::radians(80.0f);
+    float vFov = glm::radians(60.0f);
     glm::vec3 origin;
     glm::vec3 front;
     glm::vec3 up;
