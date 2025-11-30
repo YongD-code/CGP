@@ -65,8 +65,7 @@ bool g_isScanning = false;
 struct ScanBeam
 {
     bool        active;
-    glm::vec3   start;
-    glm::vec3   dir;
+
     float       maxLength;
     float       curLength;
     float       speed;
@@ -324,20 +323,6 @@ GLvoid InitGL()
 void StartScanBeam()
 {
     g_beam.active = true;
-
-    // 건 위치 정보가 클래스에 없길래 카메라 정보 이용
-    glm::vec3 camPos = g_player.camPos;
-    glm::vec3 camFront = glm::normalize(g_player.camFront);
-    glm::vec3 camUp = glm::normalize(g_player.camUp);
-    glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
-
-    // 우측 하단 정도로
-    g_beam.start = camPos
-        + camFront * 0.2f   // 화면 앞으로 조금
-        + camRight * 0.3f   // 오른쪽으로
-        - camUp * 0.2f;  // 아래로
-
-    g_beam.dir = camFront;
     g_beam.maxLength = 40.0f;
     g_beam.curLength = 0.0f;
     g_beam.speed = 200.0f;
@@ -349,21 +334,6 @@ GLvoid drawScene()
     int now = glutGet(GLUT_ELAPSED_TIME);
     float deltaTime = (now - lastTime) * 0.001f;
     lastTime = now;
-
-    if (g_beam.active)
-    {
-        g_beam.curLength += g_beam.speed * deltaTime;
-
-        if (g_beam.curLength >= g_beam.maxLength)
-        {
-            g_beam.curLength = g_beam.maxLength;
-            g_beam.tailTime -= deltaTime;
-            if (g_beam.tailTime <= 0.0f)
-            {
-                g_beam.active = false;
-            }
-        }
-    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
@@ -399,24 +369,52 @@ GLvoid drawScene()
 
     if (g_beam.active)
     {
-        glUseProgram(shaderProgramID);
+        if (g_beam.curLength < g_beam.maxLength)
+        {
+            g_beam.curLength += g_beam.speed * deltaTime;
+            if (g_beam.curLength > g_beam.maxLength)
+            {
+                g_beam.curLength = g_beam.maxLength;
+            }
+        }
+
+        if (!g_isScanning)
+        {
+            g_beam.tailTime -= deltaTime;
+            if (g_beam.tailTime <= 0.0f)
+            {
+                g_beam.active = false;
+            }
+        }
+
+        glm::vec3 camPos = g_player.camPos;
+        glm::vec3 camFront = glm::normalize(g_player.camFront);
+        glm::vec3 camUp = glm::normalize(g_player.camUp);
+        glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
+
+        glm::vec3 gunBase = camPos
+            + camRight * 0.4f
+            - camUp * 1.2f
+            - camFront * 0.9f;
+
+        glm::vec3 start = gunBase + camFront * 0.6f;
+        glm::vec3 dir = camFront;
+
+        glm::vec3 endPos = start + dir * g_beam.curLength;
 
         glm::mat4 modelBeam = glm::mat4(1.0f);
         glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(modelBeam));
         glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-        glm::vec3 beamColor(1.0f, 0.1f, 0.1f);
+        glm::vec3 beamColor(1.0f, 0.0f, 0.0f);
         glUniform3fv(uColorLoc, 1, glm::value_ptr(beamColor));
-
-        glm::vec3 endPos = g_beam.start + g_beam.dir * g_beam.curLength;
 
         glLineWidth(3.0f);
         glBegin(GL_LINES);
-        glVertex3f(g_beam.start.x, g_beam.start.y, g_beam.start.z);
+        glVertex3f(start.x, start.y, start.z);
         glVertex3f(endPos.x, endPos.y, endPos.z);
         glEnd();
-
         glLineWidth(1.0f);
     }
 
@@ -497,6 +495,5 @@ void MouseMotion(int x, int y)
         glm::vec3 origin = g_player.GetPosition();
         glm::vec3 front = g_player.GetFront();
         g_lidar.ScanFan(origin, front, g_map);
-        StartScanBeam();
     }
 }
