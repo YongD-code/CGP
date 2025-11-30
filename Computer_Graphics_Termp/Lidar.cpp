@@ -70,7 +70,7 @@ void Lidar::ScanFan(const glm::vec3& origin, const glm::vec3& front, const Map& 
 
     // 스캔 영역 크기 / 해상도
     const int   steps = 5;
-    const float halfAngle = glm::radians(1.0f);
+    const float halfAngle = glm::radians(3.0f);
     const float radius = std::tan(halfAngle);
 
     for (int iy = 0; iy < steps; ++iy)

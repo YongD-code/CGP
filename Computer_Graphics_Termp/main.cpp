@@ -73,6 +73,7 @@ struct ScanBeam
 };
 
 ScanBeam g_beam{};
+float g_beamTime = 0.0f;
 
 static std::string readTextFile(const char* path)
 {
@@ -335,6 +336,7 @@ GLvoid drawScene()
     int now = glutGet(GLUT_ELAPSED_TIME);
     float deltaTime = (now - lastTime) * 0.001f;
     lastTime = now;
+    g_beamTime += deltaTime;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
@@ -391,6 +393,7 @@ GLvoid drawScene()
         glm::vec3 camPos = g_player.camPos;
         glm::vec3 camFront = glm::normalize(g_player.camFront);
         glm::vec3 camUp = glm::normalize(g_player.camUp);
+        glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
         
         glm::mat4 rot = glm::lookAt(glm::vec3(0, 0, 0), camFront, camUp);
         rot = glm::inverse(rot);
@@ -420,14 +423,29 @@ GLvoid drawScene()
 
         glLineWidth(3.0f);
         glBegin(GL_LINES);
-        // 여러 개의 레이저 선
+
+        int rayIndex = 0;
+        // 저장해놓았던 ray선들을 다 렌더링
         for (const glm::vec3& dir : rays)
         {
             glm::vec3 ndir = glm::normalize(dir);
-            glm::vec3 endPos = start + ndir * g_beam.curLength;
+
+            // 1000 같은 상수값은 만져보면서 수정, 0.7, 1.3 이런 값은 레이마다 다르게 흔들리도록
+            float phase1 = g_beamTime * 1000.0f + rayIndex * 0.7;
+            float phase2 = g_beamTime * 1000.0f + rayIndex * 1.3;
+            float shakeAmp = 0.2f; // 흔들림 세기
+
+            // x축, y축 방향으로 흔들림 벡터 생성 / sin, cos값이 시간에 따라 계속 바뀌면서 흔들림 효과 생성
+            glm::vec3 jitter =
+                camRight * (sinf(phase1) * shakeAmp) +
+                camUp * (cosf(phase2) * shakeAmp);
+
+            glm::vec3 endPos = start + ndir * g_beam.curLength + jitter;
 
             glVertex3f(start.x, start.y, start.z);
             glVertex3f(endPos.x, endPos.y, endPos.z);
+
+            ++rayIndex;
         }
         glEnd();
         glLineWidth(1.0f);
