@@ -225,12 +225,21 @@ void Lidar::StartScan(const glm::vec3& origin,
     scan.up = glm::normalize(glm::cross(right, scan.front));    // 스캔에 쓰일 진짜 up 계산
     scan.boxes = boxes;
 
+    scan.rowTimer = 0.0f;
+    scan.rowInterval = 0.03f;
     debugRays.clear();
 }
 
-void Lidar::UpdateScan()
+void Lidar::UpdateScan(float deltaTime)
 {
     if (!scan.active) return;
+
+    scan.rowTimer += deltaTime;
+    if (scan.rowTimer < scan.rowInterval)
+    {
+        return;
+    }
+    scan.rowTimer = 0.0f;
 
     int row = scan.curRow;
     if (row < 0)

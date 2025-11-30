@@ -18,6 +18,9 @@ struct ScanState {
     glm::vec3 front;
     glm::vec3 up;
     std::vector<Box> boxes;
+
+    float rowTimer;     // 다음 줄로 넘어가기까지 누적 시간
+    float rowInterval;  // 줄 하나 스캔 인터벌
 };
 
 class Lidar
@@ -56,7 +59,7 @@ public:
         const glm::vec3& up,
         const std::vector<Box>& boxes);
 
-    void UpdateScan();
+    void UpdateScan(float deltaTime);
 
     // 저장된 포인트들을 GL_POINTS 로 렌더링
     void Draw(GLuint shaderProgram,

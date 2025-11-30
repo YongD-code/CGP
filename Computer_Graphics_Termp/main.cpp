@@ -368,7 +368,7 @@ GLvoid drawScene()
         glVertex3f(p.x, p.y, p.z);
     }
     glEnd();
-    g_lidar.UpdateScan();
+    g_lidar.UpdateScan(deltaTime);
 
     if (g_beam.active)
     {
