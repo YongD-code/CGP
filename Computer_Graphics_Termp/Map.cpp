@@ -133,7 +133,6 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
                 boxes.push_back(wall);
             }
-            // 천장 만들지 말지
             bool makeCeil = false;
             if (z == entranceRow) makeCeil = entranceCeil[x];
 
@@ -141,6 +140,9 @@ void Map::InitFromArray(int w, int h, const int* data)
             ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
             ceiling.pos = glm::vec3(fx, wallHeight * 2.5f - 0.5f, fz);
             ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+            boxes.push_back(ceiling);
+
+            ceiling.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
             boxes.push_back(ceiling);
 
             if (makeCeil)
