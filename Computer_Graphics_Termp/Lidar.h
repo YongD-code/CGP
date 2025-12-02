@@ -13,7 +13,7 @@ struct ScanState {
     int horizontal = 80;   // 좌우 레이 수
     int vertical = 80;     // 위아래 레이 수
     float hFov = glm::radians(80.0f);
-    float vFov = glm::radians(60.0f);
+    float vFov = glm::radians(50.0f);
     glm::vec3 origin;
     glm::vec3 front;
     glm::vec3 up;
