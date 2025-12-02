@@ -75,6 +75,11 @@ struct ScanBeam
 ScanBeam g_beam{};
 float g_beamTime = 0.0f;
 
+bool IsInputLocked()
+{
+    return g_isScanning || g_lidar.IsScanActive();
+}
+
 static std::string readTextFile(const char* path)
 {
     std::ifstream ifs(path, std::ios::binary);
@@ -343,7 +348,11 @@ GLvoid drawScene()
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    glm::mat4 view = g_player.UpdateMoveAndGetViewMatrix(deltaTime, g_map);
+    glm::mat4 view;
+    if (IsInputLocked())
+        view = glm::lookAt(g_player.camPos, g_player.camPos + g_player.camFront, g_player.camUp);
+    else
+        view = g_player.UpdateMoveAndGetViewMatrix(deltaTime, g_map);
 
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
@@ -481,6 +490,8 @@ void KeyDown(unsigned char key, int x, int y)
     }
     if (key == 27) glutLeaveMainLoop();
 
+    if (IsInputLocked())
+        return;
     g_player.OnKeyDown(key);
 }
 
@@ -491,6 +502,18 @@ void KeyUp(unsigned char key, int x, int y)
 
 void MouseButton(int button, int state, int x, int y)
 {
+    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+    {
+        g_lidar.StartScan(
+            g_player.camPos,
+            g_player.camFront,
+            g_player.camUp,
+            g_map.GetBoxes()
+        );
+        StartScanBeam();
+    }
+    if (IsInputLocked())
+        return;
     if (button == GLUT_LEFT_BUTTON)
     {
         if (state == GLUT_DOWN)
@@ -507,22 +530,13 @@ void MouseButton(int button, int state, int x, int y)
             g_isScanning = false;
         }
     }
-
-    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
-    {
-        g_lidar.StartScan(
-            g_player.camPos,
-            g_player.camFront,
-            g_player.camUp,
-            g_map.GetBoxes()
-        );
-        StartScanBeam();
-    }
 }
 
 
 void MouseMotion(int x, int y)
 {
+    if (IsInputLocked())
+        return;
     g_player.OnMouseMotion(x, y);
 
     if (g_isScanning)

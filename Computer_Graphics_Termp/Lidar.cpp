@@ -254,7 +254,7 @@ void Lidar::UpdateScan(float deltaTime)
     glm::vec3 up = scan.up;
     glm::vec3 right = glm::normalize(glm::cross(forward, up));
 
-    float vAngle = ((float)row / (scan.vertical - 1) - 0.45f) * scan.vFov;   // row 인덱스를 각도로 매핑 -vFov/2 ~ +vFov/2
+    float vAngle = ((float)row / (scan.vertical - 1) - 0.45f) * scan.vFov;   // row 인덱스를 각도로 매핑 -vFov/2 ~ +vFov/2 -> 미세조정, 살짝 위로 올림
 
     for (int i = 0; i < scan.horizontal; i++)
     {
