@@ -143,7 +143,7 @@ void Map::InitFromArray(int w, int h, const int* data)
             boxes.push_back(ceiling);
 
             ceiling.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
-            boxes.push_back(ceiling);
+            boxes.push_back(ceiling);   // 이건 바닥임. 항상 그리게 해서 쓸데없는 부분에 바닥 매시가 추가되기는 함
 
             if (makeCeil)
             {
