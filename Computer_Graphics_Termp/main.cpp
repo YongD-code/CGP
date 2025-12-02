@@ -77,7 +77,7 @@ float g_beamTime = 0.0f;
 
 bool IsInputLocked()
 {
-    return g_isScanning || g_lidar.IsScanActive();
+    return g_lidar.IsScanActive();
 }
 
 static std::string readTextFile(const char* path)
@@ -502,7 +502,7 @@ void KeyUp(unsigned char key, int x, int y)
 
 void MouseButton(int button, int state, int x, int y)
 {
-    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && !g_isScanning)
     {
         g_lidar.StartScan(
             g_player.camPos,
@@ -535,8 +535,6 @@ void MouseButton(int button, int state, int x, int y)
 
 void MouseMotion(int x, int y)
 {
-    if (IsInputLocked())
-        return;
     g_player.OnMouseMotion(x, y);
 
     if (g_isScanning)
