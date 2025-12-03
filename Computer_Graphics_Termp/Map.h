@@ -7,11 +7,21 @@
 // 하나의 직육면체
 struct Box
 {
-    glm::vec3 pos;   // 중심 위치
-    glm::vec3 size;  // 스케일 (x, y, z)
-    glm::vec3 color; // 색상 (0~1)
-    GLuint textureID = 0;
-    bool hasTexture = false;
+    glm::vec3 pos;
+    glm::vec3 size;
+    glm::vec3 color;
+
+    bool     hasTex[6];
+    GLuint   texID[6];
+
+    Box()
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            hasTex[i] = false;
+            texID[i] = 0;
+        }
+    }
 };
 
 class Map
