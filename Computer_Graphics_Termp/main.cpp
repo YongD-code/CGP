@@ -51,6 +51,7 @@ GLint uModelLoc = -1;
 GLint uViewLoc = -1;
 GLint uProjLoc = -1;
 GLint uColorLoc = -1;
+GLint uDarkModeLoc = -1;
 
 bool cull = false;
 bool wire_mode = true;
@@ -61,6 +62,7 @@ Lidar g_lidar;
 GunRenderer g_gun;
 
 bool g_isScanning = false;
+bool g_darkMode = true;
 
 struct ScanBeam
 {
@@ -207,6 +209,8 @@ GLuint make_shaderProgram()
     uViewLoc = glGetUniformLocation(prog, "uView");
     uProjLoc = glGetUniformLocation(prog, "uProj");
     uColorLoc = glGetUniformLocation(prog, "objectColor");
+    uDarkModeLoc = glGetUniformLocation(prog, "uDarkMode");
+
 
     return prog;
 }
@@ -345,6 +349,7 @@ GLvoid drawScene()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
+    glUniform1i(uDarkModeLoc, g_darkMode ? 1 : 0);
 
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -488,6 +493,11 @@ void KeyDown(unsigned char key, int x, int y)
         if (wire_mode)  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    if (key == 'l')
+    {
+        g_darkMode = !g_darkMode;
+    }
+
     if (key == 27) glutLeaveMainLoop();
 
     if (IsInputLocked())
