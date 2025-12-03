@@ -22,6 +22,8 @@ struct Box
             texID[i] = 0;
         }
     }
+    int texRot[6] = { 0,0,0,0,0,0 };   // 0 = 회전 없음, 1 = 180도 회전
+
 };
 
 class Map
