@@ -7,6 +7,20 @@
 #include <gl/glm/gtc/type_ptr.hpp>
 #include "TextureManager.h"
 
+static void CreateRevealMask(GLuint& tex)
+{
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    const int SIZE = 256;
+    std::vector<unsigned char> blank(SIZE * SIZE, 0);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SIZE, SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, blank.data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 void Map::InitTestRoom()
 {
     boxes.clear();
@@ -17,43 +31,62 @@ void Map::InitTestRoom()
     float roomHalfSize = 50.f;
     float roomSize = 100.f;
 
+
     // 바닥
     Box floor;
     floor.pos = glm::vec3(0.0f, -wallThickness, 0.0f);
     floor.size = glm::vec3(roomSize, wallThickness * 2.f, roomSize);
     floor.color = glm::vec3(0.f, 0.f, 0.f);
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(floor.revealMask[f]);
     boxes.push_back(floor);
+
 
     // 천장
     Box ceiling;
     ceiling.pos = glm::vec3(0.0f, wallHeight - wallThickness, 0.0f);
     ceiling.size = glm::vec3(roomSize, wallThickness * 2.f, roomSize);
     ceiling.color = glm::vec3(0.f, 0.f, 0.f);
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(ceiling.revealMask[f]);
     boxes.push_back(ceiling);
+
 
     // 앞쪽 벽 (z = -roomHalfSize)
     Box wallFront;
     wallFront.pos = glm::vec3(0.0f, wallHeight * 0.5f - wallThickness, -roomHalfSize);
     wallFront.size = glm::vec3(roomSize, wallHeight, wallThickness);
     wallFront.color = glm::vec3(0.f, 0.f, 0.f);
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(wallFront.revealMask[f]);
     boxes.push_back(wallFront);
+
 
     // 뒤쪽 벽 (z = +roomHalfSize)
     Box wallBack = wallFront;
     wallBack.pos.z = roomHalfSize;
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(wallBack.revealMask[f]);
     boxes.push_back(wallBack);
+
 
     // 왼쪽 벽 (x = -roomHalfSize)
     Box wallLeft;
     wallLeft.pos = glm::vec3(-roomHalfSize, wallHeight * 0.5f - wallThickness, 0.0f);
     wallLeft.size = glm::vec3(wallThickness, wallHeight, roomSize);
     wallLeft.color = glm::vec3(0.f, 0.f, 0.f);
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(wallLeft.revealMask[f]);
     boxes.push_back(wallLeft);
+
 
     // 오른쪽 벽 (x = +roomHalfSize)
     Box wallRight = wallLeft;
     wallRight.pos.x = roomHalfSize;
+    for (int f = 0; f < 6; f++)
+        CreateRevealMask(wallRight.revealMask[f]);
     boxes.push_back(wallRight);
+
 }
 
 void Map::Draw(
@@ -93,6 +126,10 @@ void Map::Draw(
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, b.texID[face]);
                 glUniform1i(glGetUniformLocation(shaderProgram, "uTexture"), 0);
+
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, b.revealMask[face]);
+                glUniform1i(glGetUniformLocation(shaderProgram, "uRevealMask"), 1);
             }
             else
             {
@@ -153,6 +190,8 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.size = glm::vec3(cellSize, wallHeight, cellSize);
                 wall.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
                 wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                for (int f = 0; f < 6; f++)
+                    CreateRevealMask(wall.revealMask[f]);
                 if (x == 7 && z == 10)
                 {
                     wall.hasTex[1] = true;   // 앞면(face=1)
@@ -160,8 +199,13 @@ void Map::InitFromArray(int w, int h, const int* data)
                 }
                 boxes.push_back(wall);
 
-                wall.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
-                boxes.push_back(wall);
+                Box wall2;
+                wall2.size = glm::vec3(cellSize, wallHeight, cellSize);
+                wall2.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
+                wall2.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                for (int f = 0; f < 6; f++)
+                    CreateRevealMask(wall2.revealMask[f]);
+                boxes.push_back(wall2);
             }
             bool makeCeil = false;
             if (z == entranceRow) makeCeil = entranceCeil[x];
@@ -170,16 +214,25 @@ void Map::InitFromArray(int w, int h, const int* data)
             ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
             ceiling.pos = glm::vec3(fx, wallHeight * 2.5f - 0.5f, fz);
             ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+            for (int f = 0; f < 6; f++)
+                CreateRevealMask(ceiling.revealMask[f]);
             boxes.push_back(ceiling);
 
-            ceiling.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
+            Box floor;
+            floor.size = glm::vec3(cellSize, wallHeight, cellSize);
+            floor.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
+            floor.color = glm::vec3(0.1f, 0.1f, 0.1f);
+            for (int f = 0; f < 6; f++)
+                CreateRevealMask(floor.revealMask[f]);
+
             if (x == 6 && z == 9)
             {
-                ceiling.hasTex[5] = true; // 윗면
-                ceiling.texID[5] = TextureManager::Get("footprint");
-                ceiling.texRot[5] = 1;             
+                floor.hasTex[5] = true;
+                floor.texID[5] = TextureManager::Get("footprint");
+                floor.texRot[5] = 1;
             }
-            boxes.push_back(ceiling);   // 이건 바닥임. 항상 그리게 해서 쓸데없는 부분에 바닥 매시가 추가되기는 함
+
+            boxes.push_back(floor);
 
             if (makeCeil)
             {
@@ -187,6 +240,8 @@ void Map::InitFromArray(int w, int h, const int* data)
                 ceiling.size = glm::vec3(cellSize, wallHeight, cellSize);
                 ceiling.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
                 ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                for (int f = 0; f < 6; f++)
+                    CreateRevealMask(ceiling.revealMask[f]);
                 boxes.push_back(ceiling);
             }
         }

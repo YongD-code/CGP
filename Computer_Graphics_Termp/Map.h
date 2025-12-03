@@ -13,13 +13,14 @@ struct Box
 
     bool     hasTex[6];
     GLuint   texID[6];
-
+    GLuint revealMask[6];
     Box()
     {
         for (int i = 0; i < 6; i++)
         {
             hasTex[i] = false;
             texID[i] = 0;
+            revealMask[i] = 0;
         }
     }
     int texRot[6] = { 0,0,0,0,0,0 };   // 0 = 회전 없음, 1 = 180도 회전
