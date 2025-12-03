@@ -57,7 +57,7 @@ GLint uColorLoc = -1;
 GLint uDarkModeLoc = -1;
 
 bool cull = false;
-bool wire_mode = true;
+bool wire_mode = false;
 int lastTime = 0;
 Player g_player;
 Map g_map;
@@ -65,7 +65,7 @@ Lidar g_lidar;
 GunRenderer g_gun;
 
 bool g_isScanning = false;
-bool g_darkMode = true;
+bool g_darkMode = false;
 
 struct ScanBeam
 {
@@ -308,7 +308,7 @@ GLvoid InitGL()
 {
     glClearColor(1.f, 1.f, 1.f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glutSetCursor(GLUT_CURSOR_NONE);
     InitCubeMesh();
 
