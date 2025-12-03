@@ -1,5 +1,6 @@
 #include "Map.h"
 
+#include <stdio.h>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/glm/gtc/matrix_transform.hpp>
@@ -56,6 +57,7 @@ void Map::InitTestRoom()
 }
 
 void Map::Draw(
+
     GLuint shaderProgram,
     GLuint vaoCube,
     GLint uModelLoc,
@@ -66,14 +68,15 @@ void Map::Draw(
     const glm::mat4& proj
 ) const
 {
+    GLint uTexRotLoc = glGetUniformLocation(shaderProgram, "uTexRot");
+
     glUseProgram(shaderProgram);
     glBindVertexArray(vaoCube);
 
     for (const Box& b : boxes)
     {
-        glm::mat4 model = glm::mat4(1.0f);
 
-        model = glm::translate(model, b.pos);
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), b.pos);
         model = glm::scale(model, b.size);
 
         glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -81,10 +84,9 @@ void Map::Draw(
         glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
         glUniform3fv(uColorLoc, 1, glm::value_ptr(b.color));
 
-        size_t indexOffset = 0;
-
         for (int face = 0; face < 6; face++)
         {
+            glUniform1i(uTexRotLoc, b.texRot[face]);
             if (b.hasTex[face])
             {
                 glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 1);
@@ -97,8 +99,12 @@ void Map::Draw(
                 glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 0);
             }
 
-
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+            glDrawElements(
+                GL_TRIANGLES,
+                6,
+                GL_UNSIGNED_INT,
+                (void*)(sizeof(unsigned int) * face * 6)
+            );
         }
     }
 
@@ -147,6 +153,11 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.size = glm::vec3(cellSize, wallHeight, cellSize);
                 wall.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
                 wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
+                if (x == 7 && z == 10)
+                {
+                    wall.hasTex[1] = true;   // 앞면(face=1)
+                    wall.texID[1] = TextureManager::Get("footprint");
+                }
                 boxes.push_back(wall);
 
                 wall.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
@@ -163,9 +174,10 @@ void Map::InitFromArray(int w, int h, const int* data)
 
             ceiling.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
             if (x == 6 && z == 9)
-            {   
-                ceiling.hasTex[4] = true; // 윗면(+Y)
-                ceiling.texID[4] = TextureManager::Get("footprint");
+            {
+                ceiling.hasTex[5] = true; // 윗면
+                ceiling.texID[5] = TextureManager::Get("footprint");
+                ceiling.texRot[5] = 1;             
             }
             boxes.push_back(ceiling);   // 이건 바닥임. 항상 그리게 해서 쓸데없는 부분에 바닥 매시가 추가되기는 함
 
