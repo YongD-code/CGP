@@ -2,16 +2,30 @@
 
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 TexCoord;     
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
 uniform bool uDarkMode;
 
+uniform sampler2D uTexture;  
+uniform bool uHasTex; 
+
 out vec4 FragColor;
 
 void main()
 {
+
+    // 기본 색상
+    vec3 baseColor = objectColor;
+
+    // 텍스처가 있을 경우 텍스처를 우선 적용
+    if (uHasTex)
+    {
+        baseColor = texture(uTexture, TexCoord).rgb;
+    }
+
     // Ambient
     float ambientStrength = 0.25;
     vec3 ambient = ambientStrength * objectColor;
@@ -50,7 +64,7 @@ void main()
         return;
     }
     // 그 외는 어둡게
-    FragColor = vec4(objectColor * 0.03, 1.0);
+    FragColor = vec4(baseColor  * 0.03, 1.0);
     return;
 }
 
