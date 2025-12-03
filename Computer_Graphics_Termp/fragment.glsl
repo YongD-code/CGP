@@ -2,83 +2,90 @@
 
 in vec3 FragPos;
 in vec3 Normal;
-in vec2 TexCoord;     
+in vec2 TexCoord;
+
+out vec4 FragColor;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 objectColor;
 uniform bool uDarkMode;
-uniform int uTexRot;  
 
-uniform sampler2D uTexture;  
-uniform bool uHasTex; 
+uniform bool uHasTex;
+uniform sampler2D uTexture;
 
-out vec4 FragColor;
+uniform sampler2D uRevealMask;   // 텍스처가 있는 면만 사용
 
+uniform int  uTexRot;
+
+
+// ----------------------------------------------------
+// 메인
+// ----------------------------------------------------
 void main()
 {
     vec3 baseColor = objectColor;
-
     vec2 uv = TexCoord;
 
+    // 기본 텍스처 매핑
     if (uHasTex)
     {
-        // 180도 회전 옵션
         if (uTexRot == 1)
             uv = vec2(1.0 - uv.x, 1.0 - uv.y);
 
         vec4 tex = texture(uTexture, uv);
-
-        // 투명 알파 보정
         if (tex.a < 0.1)
             tex.rgb = vec3(0.1);
 
         baseColor = tex.rgb;
     }
 
-    // Ambient
-    float ambientStrength = 0.25;
-    vec3 ambient = ambientStrength * baseColor;
-
-    // Diffuse
-    vec3 norm = normalize(Normal);
+    // ----------------------------------------------------
+    // 조명 계산
+    // ----------------------------------------------------
+    vec3 norm     = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * baseColor;
+    float diff    = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse  = diff * baseColor;
 
-    // Specular
-    float specStrength = 0.35;
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 viewDir    = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16);
-    vec3 specular = specStrength * spec * vec3(1.0);
+    float spec      = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
+    vec3 specular   = 0.35 * spec * vec3(1.0);
 
-    // final (texture participates in lighting normally)
-    vec3 result = ambient + diffuse + specular;
+    vec3 ambient = 0.25 * baseColor;
+    vec3 lit = ambient + diffuse + specular;
 
-    // dark mode
-    if (uDarkMode) {
-
-        // 스캔된 점은 원래색 유지
-        if (objectColor == vec3(0.0, 1.0, 0.4)) {
-            FragColor = vec4(objectColor, 1.0);
-            return;
-        }
-        // 총
-        if (objectColor == vec3(0.25, 0.25, 0.25)) {
-            FragColor = vec4(objectColor, 1.0);
-            return;
-        }
-        // 레이저
-        if (objectColor == vec3(1.0, 0.0, 0.0)) {
+    // ----------------------------------------------------
+    // DarkMode 처리
+    // ----------------------------------------------------
+    if (uDarkMode)
+    {
+        // ● 예외 처리 (총 / 레이저 / 스캔 포인트)
+        if (objectColor == vec3(0.0,1.0,0.4) ||   // 스캔 점
+            objectColor == vec3(0.25,0.25,0.25) ||// 총
+            objectColor == vec3(1.0,0.0,0.0))     // 레이저
+        {
             FragColor = vec4(objectColor, 1.0);
             return;
         }
 
-        // dark mode에서 텍스처도 어둡게
-        FragColor = vec4(baseColor * 0.03, 1.0);
+        // ● 텍스처 없는 박스는 revealMask 적용 금지
+        if (!uHasTex)
+        {
+            FragColor = vec4(baseColor * 0.03, 1.0);
+            return;
+        }
+
+        // ● 텍스처 있는 박스만 revealMask 적용
+        float reveal = texture(uRevealMask, uv).r;
+
+        vec3 darkCol = baseColor * 0.03;
+        vec3 finalCol = mix(darkCol, baseColor, reveal);
+
+        FragColor = vec4(finalCol, 1.0);
         return;
     }
 
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(lit, 1.0);
 }
