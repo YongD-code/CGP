@@ -4,6 +4,7 @@
 #include <gl/freeglut.h>
 #include <gl/glm/gtc/matrix_transform.hpp>
 #include <gl/glm/gtc/type_ptr.hpp>
+#include "TextureManager.h"
 
 void Map::InitTestRoom()
 {
@@ -158,6 +159,14 @@ void Map::InitFromArray(int w, int h, const int* data)
             boxes.push_back(ceiling);
 
             ceiling.pos = glm::vec3(fx, wallHeight * (-0.5f) - 0.5f, fz);
+            ceiling.hasTexture = false;
+            ceiling.textureID = 0;
+            if (x == 6 && z == 9)
+            {
+
+                ceiling.hasTexture = true;
+                ceiling.textureID = TextureManager::Get("footprint");
+            }
             boxes.push_back(ceiling);   // 이건 바닥임. 항상 그리게 해서 쓸데없는 부분에 바닥 매시가 추가되기는 함
 
             if (makeCeil)

@@ -21,6 +21,7 @@
 #include "tiny_obj_loader.h"
 #include "Lidar.h"
 #include "stb_image.h"
+#include "TextureManager.h"
 
 using std::cout;
 using std::endl;
@@ -102,6 +103,7 @@ static std::string readTextFile(const char* path)
 
 void main(int argc, char** argv)
 {
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowPosition(100, 100);
@@ -123,7 +125,7 @@ void main(int argc, char** argv)
         std::cerr << "ERROR: shader program 생성 실패\n";
         return;
     }
-
+    TextureManager::Load("footprint", "footprint.png");
     InitGL();
 
     glutDisplayFunc(drawScene);

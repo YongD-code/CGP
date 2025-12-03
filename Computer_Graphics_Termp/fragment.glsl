@@ -66,6 +66,5 @@ void main()
     // 그 외는 어둡게
     FragColor = vec4(baseColor  * 0.03, 1.0);
     return;
-}
-
+    }
 }
