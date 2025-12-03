@@ -137,6 +137,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="TextureManager.h" />
     <ClCompile Include="tiny_obj_loader.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +146,7 @@
     <ClInclude Include="Lidar.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

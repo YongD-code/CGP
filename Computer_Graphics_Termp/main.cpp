@@ -1,4 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
 
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,7 @@
 #include "gunrender.h"
 #include "tiny_obj_loader.h"
 #include "Lidar.h"
+#include "stb_image.h"
 
 using std::cout;
 using std::endl;
@@ -219,57 +221,57 @@ GLvoid InitCubeMesh()
 {
     float vertices[] =
     {
-        // 뒤쪽(-Z) 면
-        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 0
-         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 1
-         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 2
-        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 3
+        // 뒤(-Z)
+        -0.5f,-0.5f,-0.5f,   0,0,-1,   0,0,
+         0.5f,-0.5f,-0.5f,   0,0,-1,   1,0,
+         0.5f, 0.5f,-0.5f,   0,0,-1,   1,1,
+        -0.5f, 0.5f,-0.5f,   0,0,-1,   0,1,
 
-        // 앞쪽(+Z) 면
-        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 4
-         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 5
-         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 6
-        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 7
+        // 앞(+Z)
+        -0.5f,-0.5f, 0.5f,   0,0,1,    0,0,
+         0.5f,-0.5f, 0.5f,   0,0,1,    1,0,
+         0.5f, 0.5f, 0.5f,   0,0,1,    1,1,
+        -0.5f, 0.5f, 0.5f,   0,0,1,    0,1,
 
-        // 왼쪽(-X) 면
-        -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 8
-        -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 9
-        -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 10
-        -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 11
+        // 왼(-X)
+        -0.5f,-0.5f,-0.5f,  -1,0,0,    0,0,
+        -0.5f, 0.5f,-0.5f,  -1,0,0,    0,1,
+        -0.5f, 0.5f, 0.5f,  -1,0,0,    1,1,
+        -0.5f,-0.5f, 0.5f,  -1,0,0,    1,0,
 
-        // 오른쪽(+X) 면
-         0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 12
-         0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 13
-         0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 14
-         0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 15
+        // 오른(+X)
+         0.5f,-0.5f,-0.5f,   1,0,0,    0,0,
+         0.5f, 0.5f,-0.5f,   1,0,0,    0,1,
+         0.5f, 0.5f, 0.5f,   1,0,0,    1,1,
+         0.5f,-0.5f, 0.5f,   1,0,0,    1,0,
 
-         // 아래(-Y) 면
-         -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 16
-          0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 17
-          0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 18
-         -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 19
+         // 아래(-Y)
+         -0.5f,-0.5f,-0.5f,   0,-1,0,   0,0,
+          0.5f,-0.5f,-0.5f,   0,-1,0,   1,0,
+          0.5f,-0.5f, 0.5f,   0,-1,0,   1,1,
+         -0.5f,-0.5f, 0.5f,   0,-1,0,   0,1,
 
-         // 위(+Y) 면
-         -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 20
-          0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 21
-          0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 22
-         -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f  // 23
+         // 위(+Y)
+         -0.5f, 0.5f,-0.5f,   0,1,0,    0,0,
+          0.5f, 0.5f,-0.5f,   0,1,0,    1,0,
+          0.5f, 0.5f, 0.5f,   0,1,0,    1,1,
+         -0.5f, 0.5f, 0.5f,   0,1,0,    0,1,
     };
 
     unsigned int indices[] =
     {
         // 뒤
-        1, 0, 3,   3, 2, 1,
+        1,0,3,  3,2,1,
         // 앞
-        4, 5, 6,   6, 7, 4,
+        4,5,6,  6,7,4,
         // 왼
-        11, 10, 9,   9, 8, 11,
+        11,10,9, 9,8,11,
         // 오른
-        12,13,14,  14,15,12,
+        12,13,14, 14,15,12,
         // 아래
-        16,17,18,  18,19,16,
+        16,17,18, 18,19,16,
         // 위
-        20,23,22,  22,21,20
+        20,23,22, 22,21,20
     };
 
     glGenVertexArrays(1, &VAO_cube);
@@ -284,14 +286,21 @@ GLvoid InitCubeMesh()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    // aPos
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 
+    // aNormal
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    // aTexCoord
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
     glBindVertexArray(0);
 }
+
 
 GLvoid InitGL()
 {
@@ -338,6 +347,31 @@ void StartScanBeam()
     g_beam.curLength = 0.0f;
     g_beam.speed = 200.0f;
     g_beam.tailTime = 0.05f;
+}
+
+GLuint LoadTexture(const char* filename)
+{
+    int w, h, n;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load(filename, &w, &h, &n, 0);
+    if (!data) return 0;
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    GLenum format = (n == 4 ? GL_RGBA : GL_RGB);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+    return tex;
 }
 
 GLvoid drawScene()

@@ -74,14 +74,29 @@ void Map::Draw(
 
         model = glm::translate(model, b.pos);
         model = glm::scale(model, b.size);
-
+            
         glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
         glUniform3fv(uColorLoc, 1, glm::value_ptr(b.color));
 
+        if (b.hasTexture)
+        {
+            glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 1);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, b.textureID);
+            glUniform1i(glGetUniformLocation(shaderProgram, "uTexture"), 0);
+        }
+        else
+        {
+            glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 0);
+        }
+
+
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
+
 
     glBindVertexArray(0);
 }

@@ -10,6 +10,8 @@ struct Box
     glm::vec3 pos;   // 중심 위치
     glm::vec3 size;  // 스케일 (x, y, z)
     glm::vec3 color; // 색상 (0~1)
+    GLuint textureID = 0;
+    bool hasTexture = false;
 };
 
 class Map
