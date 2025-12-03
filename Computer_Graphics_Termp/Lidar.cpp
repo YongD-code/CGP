@@ -8,6 +8,55 @@
 #include <gl/glm/gtc/type_ptr.hpp>
 #include <gl/glm/gtx/quaternion.hpp>
 
+static void ComputeFaceUV(const Box& b, int face, int texRot, const glm::vec3& hitPos, float& u, float& v)
+{
+    glm::vec3 local = hitPos - b.pos;
+    glm::vec3 half = b.size * 0.5f;
+
+    switch (face)
+    {
+    case 0: // -Z
+        u = (local.x + half.x) / b.size.x;
+        v = (local.y + half.y) / b.size.y;
+        break;
+
+    case 1: // +Z
+        u = (local.x + half.x) / b.size.x;
+        v = (local.y + half.y) / b.size.y;
+        break;
+
+    case 2: // -X
+        u = (local.z + half.z) / b.size.z;
+        v = (local.y + half.y) / b.size.y;
+        break;
+
+    case 3: // +X
+        u = (local.z + half.z) / b.size.z;
+        v = (local.y + half.y) / b.size.y;
+        break;
+
+    case 4: // -Y
+        u = (local.x + half.x) / b.size.x;
+        v = (local.z + half.z) / b.size.z;
+        break;
+
+    case 5: // +Y
+        u = (local.x + half.x) / b.size.x;
+        v = (local.z + half.z) / b.size.z;
+        break;
+    }
+
+    // -------------------------
+    // ★ texRot = 1 (180도 회전)
+    // -------------------------
+    if (texRot == 1)
+    {
+        u = 1.0f - u;
+        v = 1.0f - v;
+    }
+}
+
+
 Lidar::Lidar()
     : VAO(0)
     , VBO(0)
@@ -109,27 +158,75 @@ void Lidar::ScanSingleRay(const glm::vec3& origin, const glm::vec3& dir, const M
 
     const std::vector<Box>& boxes = map.GetBoxes();
 
-    glm::vec3 hitPos;
-    const float maxDist = 1000.0f;   // 맵 크기에 맞춰 나중에 조정 가능
+    glm::vec3 hit;
+    int boxIndex = -1;
+    int faceIndex = -1;
 
-    if (Raycast(origin, nDir, map.GetBoxes(), maxDist, hitPos))
+    const float maxDist = 1000.0f;
+
+    // ★ faceIndex와 boxIndex를 모두 얻는 Raycast 호출
+    if (Raycast(origin, nDir, boxes, maxDist, hit, &boxIndex, &faceIndex))
     {
-        AddHitPoint(hitPos);
+        AddHitPoint(hit);
+
+        // ★ 유효한 박스 + face 일 때만 revealMask 기록
+        if (boxIndex >= 0 && faceIndex >= 0)
+        {
+            const Box& b = boxes[boxIndex];
+
+            float u, v;
+            // ★ texRot 포함한 UV 계산
+            ComputeFaceUV(b, faceIndex, b.texRot[faceIndex], hit, u, v);
+
+            int X = int(u * 255);
+            int Y = int(v * 255);
+
+            glBindTexture(GL_TEXTURE_2D, b.revealMask[faceIndex]);
+
+            const int R = 6;
+            unsigned char value = 255;
+
+            for (int j = -R; j <= R; j++)
+            {
+                for (int i = -R; i <= R; i++)
+                {
+                    if (i * i + j * j > R * R) continue;
+
+                    int tx = X + i;
+                    int ty = Y + j;
+                    if (tx < 0 || tx > 255 || ty < 0 || ty > 255) continue;
+
+                    glTexSubImage2D(GL_TEXTURE_2D, 0,
+                        tx, ty,
+                        1, 1,
+                        GL_RED, GL_UNSIGNED_BYTE,
+                        &value);
+                }
+            }
+        }
     }
 }
+
 
 bool Lidar::Raycast(
     const glm::vec3& origin,
     const glm::vec3& dir,
     const std::vector<Box>& boxes,
     float maxDist,
-    glm::vec3& hitPos)
+    glm::vec3& hitPos,
+    int* outBoxIndex,
+    int* outFaceIndex)
 {
     bool hit = false;
     float closestT = maxDist;
 
-    for (const Box& b : boxes)
+    int bestBox = -1;
+    int bestFace = -1;
+
+    for (int bi = 0; bi < boxes.size(); bi++)
     {
+        const Box& b = boxes[bi];
+
         glm::vec3 half = b.size * 0.5f;
         glm::vec3 minB = b.pos - half;
         glm::vec3 maxB = b.pos + half;
@@ -137,74 +234,98 @@ bool Lidar::Raycast(
         float tmin = 0.0f;
         float tmax = maxDist;
 
-        // X축
-        if (fabs(dir.x) < 1e-6f)
-        {
-            // 레이가 X축에 평행일 때, 범위 밖이면 교차 없음
-            if (origin.x < minB.x || origin.x > maxB.x)
-                continue;
-        }
-        else
+        int hitFace = -1;
+
+        // X축 평면 충돌 판단
+        if (fabs(dir.x) > 1e-6f)
         {
             float tx1 = (minB.x - origin.x) / dir.x;
             float tx2 = (maxB.x - origin.x) / dir.x;
             if (tx1 > tx2) std::swap(tx1, tx2);
+
+            float old = tmin;
             tmin = std::max(tmin, tx1);
             tmax = std::min(tmax, tx2);
+
+            if (tmin != old)
+                hitFace = (dir.x > 0) ? 2 : 3;  // -X = 2, +X = 3
+
             if (tmin > tmax) continue;
+        }
+        else
+        {
+            if (origin.x < minB.x || origin.x > maxB.x)
+                continue;
         }
 
         // Y축
-        if (fabs(dir.y) < 1e-6f)
-        {
-            if (origin.y < minB.y || origin.y > maxB.y)
-                continue;
-        }
-        else
+        if (fabs(dir.y) > 1e-6f)
         {
             float ty1 = (minB.y - origin.y) / dir.y;
             float ty2 = (maxB.y - origin.y) / dir.y;
             if (ty1 > ty2) std::swap(ty1, ty2);
+
+            float old = tmin;
             tmin = std::max(tmin, ty1);
             tmax = std::min(tmax, ty2);
+
+            if (tmin != old)
+                hitFace = (dir.y > 0) ? 4 : 5;  // -Y = 4, +Y = 5
+
             if (tmin > tmax) continue;
+        }
+        else
+        {
+            if (origin.y < minB.y || origin.y > maxB.y)
+                continue;
         }
 
         // Z축
-        if (fabs(dir.z) < 1e-6f)
-        {
-            if (origin.z < minB.z || origin.z > maxB.z)
-                continue;
-        }
-        else
+        if (fabs(dir.z) > 1e-6f)
         {
             float tz1 = (minB.z - origin.z) / dir.z;
             float tz2 = (maxB.z - origin.z) / dir.z;
             if (tz1 > tz2) std::swap(tz1, tz2);
+
+            float old = tmin;
             tmin = std::max(tmin, tz1);
             tmax = std::min(tmax, tz2);
+
+            if (tmin != old)
+                hitFace = (dir.z > 0) ? 0 : 1;  // -Z = 0, +Z = 1
+
             if (tmin > tmax) continue;
         }
+        else
+        {
+            if (origin.z < minB.z || origin.z > maxB.z)
+                continue;
+        }
 
-        // tmin이 음수면 레이가 박스 내부에서 시작한 경우  
-        // 이때는 tmax를 충돌로 사용
-        float tHit = tmin >= 0.0f ? tmin : tmax;
+        float tHit = tmin;
 
-        if (tHit < 0.0f) continue;         // 뒤쪽 충돌 제거
-        if (tHit > maxDist) continue;      // 최대 거리 넘어가면 무시
+        if (tHit < 0.0f || tHit > maxDist)
+            continue;
 
         if (tHit < closestT)
         {
             closestT = tHit;
             hit = true;
+            bestBox = bi;
+            bestFace = hitFace;
         }
     }
 
     if (!hit) return false;
 
     hitPos = origin + dir * closestT;
+
+    if (outBoxIndex)  *outBoxIndex = bestBox;
+    if (outFaceIndex) *outFaceIndex = bestFace;
+
     return true;
 }
+
 
 void Lidar::StartScan(const glm::vec3& origin,
     const glm::vec3& front,
@@ -269,8 +390,42 @@ void Lidar::UpdateScan(float deltaTime)
         debugRays.push_back(dir);
 
         glm::vec3 hit;
-        if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit))
+        int boxIndex, faceIndex;
+        if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit, &boxIndex, &faceIndex))
+        {
             AddHitPoint(hit);
+
+            // ★ 여기에서 revealMask 칠하기
+            Box& b = scan.boxes[boxIndex];
+
+            float u, v;
+            ComputeFaceUV(b, faceIndex, b.texRot[faceIndex], hit, u, v);
+
+            int X = int(u * 255);
+            int Y = int(v * 255);
+
+            glBindTexture(GL_TEXTURE_2D, b.revealMask[faceIndex]);
+
+            const int R = 6;
+            unsigned char value = 255;
+
+            for (int j = -R; j <= R; j++)
+                for (int i = -R; i <= R; i++)
+                {
+                    if (i * i + j * j > R * R) continue;
+
+                    int tx = X + i;
+                    int ty = Y + j;
+
+                    if (tx < 0 || tx > 255 || ty < 0 || ty > 255) continue;
+
+                    glTexSubImage2D(GL_TEXTURE_2D, 0,
+                        tx, ty,
+                        1, 1,
+                        GL_RED, GL_UNSIGNED_BYTE,
+                        &value);
+                }
+        }
     }
 
     scan.curRow--;   // 다음 줄로 넘어가기

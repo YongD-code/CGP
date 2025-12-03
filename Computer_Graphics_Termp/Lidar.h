@@ -48,11 +48,15 @@ public:
         const glm::vec3& front,
         const Map& map);
 
-    bool Raycast(const glm::vec3& origin,
+    bool Raycast(
+        const glm::vec3& origin,
         const glm::vec3& dir,
         const std::vector<Box>& boxes,
         float maxDist,
-        glm::vec3& hitPos);
+        glm::vec3& hitPos,
+        int* outBoxIndex = nullptr,
+        int* outFaceIndex = nullptr
+    );
 
     void StartScan(const glm::vec3& origin,
         const glm::vec3& front,
