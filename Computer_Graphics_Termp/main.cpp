@@ -73,6 +73,9 @@ bool g_isScanning = false;
 bool g_darkMode = false;
 std::string password = "1209";
 std::string entered = "";
+bool g_doorOpening = false;
+float g_doorFallY = 0.0f;
+float g_doorFallSpeed = 6.0f;
 
 struct ScanBeam
 {
@@ -418,28 +421,14 @@ GLuint LoadTexture(const char* filename)
 
 void OpenDoor()
 {
-    auto& bx = g_map.GetBoxesMutable();
-
-    // 문 제거
-    if (g_map.doorIndex >= 0 && g_map.doorIndex < bx.size())
-    {
-        bx[g_map.doorIndex].size = glm::vec3(0, 0, 0);
-    }
-
-    // 키패드 제거
-    for (int i = g_map.keypadStartIndex; i <= g_map.keypadEndIndex; i++)
-    {
-        if (i >= 0 && i < bx.size())
-        {
-            bx[i].size = glm::vec3(0, 0, 0);
-        }
-    }
-
+    g_doorOpening = true;
+    g_doorFallY = 0.0f;
 }
 
 
 void OnDigitPressed(int d)
 {
+    //디버깅용 콘솔창에서 뭐 눌렸는지 확인해보기 위해서 일단 넣어놓음
     std::cout << "[KEYPAD] Pressed: " << d << std::endl;
     entered.push_back('0' + d);
     std::cout << "[KEYPAD] Buffer: " << entered << std::endl;
@@ -580,6 +569,48 @@ GLvoid drawScene()
         glLineWidth(1.0f);
     }
 
+    if (g_doorOpening)
+    {
+        auto& bx = g_map.GetBoxesMutable();
+
+        float dy = g_doorFallSpeed * deltaTime;
+
+
+        if (g_map.doorIndex >= 0 && g_map.doorIndex < bx.size())
+        {
+            bx[g_map.doorIndex].pos.y -= dy;
+        }
+
+        for (int i = g_map.keypadStartIndex; i <= g_map.keypadEndIndex; i++)
+        {
+            if (i >= 0 && i < bx.size())
+            {
+                bx[i].pos.y -= dy;
+            }
+        }
+
+        g_doorFallY += dy;
+
+        if (g_doorFallY > 20.0f)
+        {
+            if (g_map.doorIndex >= 0 && g_map.doorIndex < bx.size())
+            {
+                bx[g_map.doorIndex].size = glm::vec3(0, 0, 0);
+                bx[g_map.doorIndex].pos.y = -9999.0f;
+            }
+
+            for (int i = g_map.keypadStartIndex; i <= g_map.keypadEndIndex; i++)
+            {
+                if (i >= 0 && i < bx.size())
+                {
+                    bx[i].size = glm::vec3(0, 0, 0);
+                    bx[i].pos.y = -9999.0f;
+                }
+            }
+
+            g_doorOpening = false;
+        }
+    }
     glutSwapBuffers();
     glutPostRedisplay();
 }
