@@ -211,6 +211,7 @@ void Map::InitFromArray(int w, int h, const int* data)
                 }
                 boxes.push_back(wall);
 
+
                 Box wall2;
                 wall2.size = glm::vec3(cellSize, wallHeight, cellSize);
                 wall2.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
@@ -228,6 +229,11 @@ void Map::InitFromArray(int w, int h, const int* data)
             ceiling.color = glm::vec3(0.1f, 0.1f, 0.1f);
             for (int f = 0; f < 6; f++)
                 CreateRevealMask(ceiling.revealMask[f]);
+            if (x == 14 && z == 14)
+            {
+                ceiling.hasTex[4] = true;
+                ceiling.texID[4] = TextureManager::Get("hint3");
+            }
             boxes.push_back(ceiling);
 
             Box floor;
@@ -238,6 +244,12 @@ void Map::InitFromArray(int w, int h, const int* data)
                 CreateRevealMask(floor.revealMask[f]);
 
             if (x == 6 && z == 25)
+            {
+                floor.hasTex[5] = true;
+                floor.texID[5] = TextureManager::Get("footprint");
+                floor.texRot[5] = 1;
+            }
+            if (x == 8 && z == 2)
             {
                 floor.hasTex[5] = true;
                 floor.texID[5] = TextureManager::Get("footprint");
@@ -274,6 +286,11 @@ void Map::InitFromArray(int w, int h, const int* data)
         for (int f = 0; f < 6; f++) CreateRevealMask(door.revealMask[f]);
 
         doorIndex = boxes.size();
+        if (doorMapX == 8 && doorMapZ == 1)
+        {
+            door.hasTex[1] = true;   // ¾Õ¸é(face=1)
+            door.texID[1] = TextureManager::Get("background");
+        }
         boxes.push_back(door);
     }
 

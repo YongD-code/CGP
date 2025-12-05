@@ -140,6 +140,7 @@ void main(int argc, char** argv)
     TextureManager::Load("hint2", "keypad_hint2.png");
     TextureManager::Load("hint3", "keypad_hint3.png");
     TextureManager::Load("hint4", "keypad_hint4.png");
+    TextureManager::Load("background", "keypad_bg.png");
     for (int i = 0; i < 10; i++)
     {
         TextureManager::Load(
