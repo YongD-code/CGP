@@ -348,7 +348,7 @@ void Lidar::StartScan(const glm::vec3& origin,
     scan.boxes = boxes;
 
     scan.rowTimer = 0.0f;
-    scan.rowInterval = 0.05f;
+    scan.rowInterval = 0.03f;
     debugRays.clear();
 }
 
