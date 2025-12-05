@@ -389,7 +389,7 @@ void Lidar::UpdateScan(float deltaTime)
 
         glm::vec3 hit;
         int boxIndex, faceIndex;
-        if (Raycast(scan.origin, dir, scan.boxes, 40.0f, hit, &boxIndex, &faceIndex))
+        if (Raycast(scan.origin, dir, scan.boxes, 1000.0f, hit, &boxIndex, &faceIndex))
         {
             AddHitPoint(hit);
 

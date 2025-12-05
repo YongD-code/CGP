@@ -192,7 +192,7 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
                 for (int f = 0; f < 6; f++)
                     CreateRevealMask(wall.revealMask[f]);
-                if (x == 7 && z == 10)
+                if (x == 7 && z == 26)
                 {
                     wall.hasTex[1] = true;   // ¾Õ¸é(face=1)
                     wall.texID[1] = TextureManager::Get("footprint");
@@ -225,7 +225,7 @@ void Map::InitFromArray(int w, int h, const int* data)
             for (int f = 0; f < 6; f++)
                 CreateRevealMask(floor.revealMask[f]);
 
-            if (x == 6 && z == 9)
+            if (x == 6 && z == 25)
             {
                 floor.hasTex[5] = true;
                 floor.texID[5] = TextureManager::Get("footprint");
