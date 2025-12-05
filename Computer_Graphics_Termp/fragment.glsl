@@ -17,6 +17,7 @@ uniform sampler2D uTexture;
 uniform sampler2D uRevealMask;   // 텍스처가 있는 면만 사용
 
 uniform int  uTexRot;
+uniform bool uFlipX;
 
 void main()
 {
@@ -28,6 +29,9 @@ void main()
     {
         if (uTexRot == 1)
             uv = vec2(1.0 - uv.x, 1.0 - uv.y);
+
+        if (uFlipX)
+            uv.x = 1.0 - uv.x;
 
         vec4 tex = texture(uTexture, uv);
         if (tex.a < 0.1)
@@ -65,17 +69,22 @@ void main()
         // 텍스처 없는 박스는 revealMask 적용 금지
         if (!uHasTex)
         {
-            FragColor = vec4(baseColor * 0.03, 1.0);
+            FragColor = vec4(0.0, 0.0, 0.0, 1.0);
             return;
         }
 
         // 텍스처 있는 박스만 revealMask 적용
         float reveal = texture(uRevealMask, uv).r;
 
-        vec3 darkCol = baseColor * 0.03;
-        vec3 finalCol = mix(darkCol, baseColor, reveal);
+          if (reveal < 0.01)
+        {
+            // 스캔되지 않은 텍스처는 절대 안 보임
+            FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+        }
 
-        FragColor = vec4(finalCol, 1.0);
+        vec3 litTex = baseColor;  
+        FragColor = vec4(litTex * reveal, 1.0);
         return;
     }
 
