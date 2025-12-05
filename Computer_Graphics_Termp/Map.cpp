@@ -250,4 +250,83 @@ void Map::InitFromArray(int w, int h, const int* data)
             }
         }
     }
+
+    {
+        int doorMapX = 8;
+        int doorMapZ = 1;
+
+        float fx = (doorMapX - w / 2.0f) * cellSize + cellSize * 0.5f;
+        float fz = (doorMapZ - h / 2.0f) * cellSize + cellSize * 0.5f;
+
+        Box door;
+        door.size = glm::vec3(cellSize, wallHeight, cellSize);
+        door.pos = glm::vec3(fx, wallHeight * 0.5f - 0.5f, fz);
+        door.color = glm::vec3(0.3f, 0.3f, 0.3f);
+
+        for (int f = 0; f < 6; f++) CreateRevealMask(door.revealMask[f]);
+
+        doorIndex = boxes.size();
+        boxes.push_back(door);
+    }
+
+    //---------------------------------------------------------
+    // 키패드 생성 (PC 키패드 형태)
+    // [1][2][3]
+    // [4][5][6]
+    // [7][8][9]
+    //    [0]
+    //---------------------------------------------------------
+    {
+        float cellSize = 4.0f;
+        float wallHeight = 4.0f;
+
+        int doorMapX = 8;
+        int doorMapZ = 1;
+
+        float doorX = (doorMapX - w / 2.0f) * cellSize + cellSize * 0.5f;
+        float doorZ = (doorMapZ - h / 2.0f) * cellSize + cellSize * 0.5f;
+
+        glm::vec3 base = glm::vec3(doorX, 3.0f, doorZ + 2.0f);
+
+        std::vector<int> layout = {
+            1,2,3,
+            4,5,6,
+            7,8,9,
+           -1,0,-1
+        };
+
+        float dx = 1.0f;
+        float dy = 1.0f;
+
+        keypadStartIndex = boxes.size();
+
+        for (int r = 0; r < 4; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                int k = layout[r * 3 + c];
+                if (k == -1) continue;
+
+                Box key;
+                key.size = glm::vec3(0.8f, 0.8f, 0.15f);
+
+                float ox = (c - 1) * dx;
+                float oy = -(r * dy);
+
+                key.pos = base + glm::vec3(ox, oy, 0.0f);
+
+                key.hasTex[1] = true;
+                key.texID[1] = TextureManager::Get("digit_" + std::to_string(k));
+
+                key.color = glm::vec3(0.2f, 0.2f, 0.2f);
+
+                for (int f = 0; f < 6; f++) CreateRevealMask(key.revealMask[f]);
+
+                keypadDigits.push_back(k);
+                boxes.push_back(key);
+            }
+        }
+
+        keypadEndIndex = boxes.size() - 1;
+    }
 }
