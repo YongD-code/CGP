@@ -18,6 +18,7 @@ static void ComputeFaceUV(const Box& b, int face, int texRot, const glm::vec3& h
     case 0: // -Z
         u = (local.x + half.x) / b.size.x;
         v = (local.y + half.y) / b.size.y;
+        u = 1.0f - u;
         break;
 
     case 1: // +Z
