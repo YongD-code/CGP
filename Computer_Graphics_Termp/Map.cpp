@@ -101,6 +101,7 @@ void Map::Draw(
     GLint uHasTexLoc,
     GLint uTextureLoc,
     GLint uRevealMaskLoc,
+    GLint uFlipXLoc,
     const glm::mat4& view,
     const glm::mat4& proj
 ) const
@@ -124,6 +125,7 @@ void Map::Draw(
         for (int face = 0; face < 6; face++)
         {
             glUniform1i(uTexRotLoc, b.texRot[face]);
+            glUniform1i(uFlipXLoc, b.texFlipX[face] ? 1 : 0);
             if (b.hasTex[face])
             {
                 glUniform1i(uHasTexLoc, 1);
@@ -200,6 +202,12 @@ void Map::InitFromArray(int w, int h, const int* data)
                 {
                     wall.hasTex[1] = true;   // 앞면(face=1)
                     wall.texID[1] = TextureManager::Get("footprint");
+                }
+                if (x == 1 && z == 22)
+                {
+                    wall.hasTex[3] = true;   // 앞면(face=1)
+                    wall.texID[3] = TextureManager::Get("hint2");
+                    wall.texFlipX[3] = true;
                 }
                 boxes.push_back(wall);
 
