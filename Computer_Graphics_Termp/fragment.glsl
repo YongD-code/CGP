@@ -18,10 +18,6 @@ uniform sampler2D uRevealMask;   // 텍스처가 있는 면만 사용
 
 uniform int  uTexRot;
 
-
-// ----------------------------------------------------
-// 메인
-// ----------------------------------------------------
 void main()
 {
     vec3 baseColor = objectColor;
@@ -40,9 +36,7 @@ void main()
         baseColor = tex.rgb;
     }
 
-    // ----------------------------------------------------
     // 조명 계산
-    // ----------------------------------------------------
     vec3 norm     = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff    = max(dot(norm, lightDir), 0.0);
@@ -56,28 +50,26 @@ void main()
     vec3 ambient = 0.25 * baseColor;
     vec3 lit = ambient + diffuse + specular;
 
-    // ----------------------------------------------------
     // DarkMode 처리
-    // ----------------------------------------------------
     if (uDarkMode)
     {
-        // ● 예외 처리 (총 / 레이저 / 스캔 포인트)
+        // 예외 처리 (총 / 레이저 / 스캔 포인트)
         if (objectColor == vec3(0.0,1.0,0.4) ||   // 스캔 점
             objectColor == vec3(0.25,0.25,0.25) ||// 총
             objectColor == vec3(1.0,0.0,0.0))     // 레이저
         {
-            FragColor = vec4(objectColor, 1.0);
+            FragColor = vec4(baseColor, 1.0);
             return;
         }
 
-        // ● 텍스처 없는 박스는 revealMask 적용 금지
+        // 텍스처 없는 박스는 revealMask 적용 금지
         if (!uHasTex)
         {
             FragColor = vec4(baseColor * 0.03, 1.0);
             return;
         }
 
-        // ● 텍스처 있는 박스만 revealMask 적용
+        // 텍스처 있는 박스만 revealMask 적용
         float reveal = texture(uRevealMask, uv).r;
 
         vec3 darkCol = baseColor * 0.03;

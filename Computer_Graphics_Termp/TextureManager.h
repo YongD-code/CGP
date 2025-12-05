@@ -3,13 +3,12 @@
 #include <unordered_map>
 #include <gl/glew.h>
 
-// 네 프로젝트에 이미 있는 LoadTexture 함수 사용
 GLuint LoadTexture(const char* filename);
 
 class TextureManager
 {
 public:
-    // 텍스처 이름 → OpenGL 텍스처 ID
+    // 텍스처 이름 -> 텍스처 ID
     static std::unordered_map<std::string, GLuint> textures;
 
     // 텍스처 로드 (이미 로드되어 있으면 기존 ID 반환)
@@ -32,7 +31,7 @@ public:
         return textures[name];
     }
 
-    // 텍스처 모두 제거 (옵션)
+    // 텍스처 모두 제거
     static void Clear()
     {
         for (auto& kv : textures)

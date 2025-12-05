@@ -46,9 +46,7 @@ static void ComputeFaceUV(const Box& b, int face, int texRot, const glm::vec3& h
         break;
     }
 
-    // -------------------------
-    // ★ texRot = 1 (180도 회전)
-    // -------------------------
+    // texRot = 1 (180도 회전)
     if (texRot == 1)
     {
         u = 1.0f - u;
