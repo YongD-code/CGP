@@ -71,6 +71,8 @@ GunRenderer g_gun;
 
 bool g_isScanning = false;
 bool g_darkMode = false;
+std::string password = "1209";
+std::string entered = "";
 
 struct ScanBeam
 {
@@ -130,6 +132,13 @@ void main(int argc, char** argv)
         return;
     }
     TextureManager::Load("footprint", "footprint.png");
+    for (int i = 0; i < 10; i++)
+    {
+        TextureManager::Load(
+            "digit_" + std::to_string(i),
+            "digit_" + std::to_string(i) + ".png"
+        );
+    }
     InitGL();
 
     glutDisplayFunc(drawScene);
@@ -328,11 +337,12 @@ GLvoid InitGL()
     lastTime = glutGet(GLUT_ELAPSED_TIME);
     g_player.OnResize(width, height);
     const int mapW = 17;
-    const int mapH = 30;
+    const int mapH = 31;
 
     int mapData[mapH][mapW] =
     {
         {1,1,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,0,1,0,1,0,0,0,0,0,0,0},
         {1,0,0,0,0,1,1,1,0,1,1,1,1,1,0,0,0},
         {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0},
         {1,0,0,0,0,1,1,1,1,1,1,1,0,1,0,0,0},
@@ -367,6 +377,8 @@ GLvoid InitGL()
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
     g_gun.Load("Gun.obj");
     g_lidar.Init();
+
+
 }
 
 // 레이저 위치는 항상 갱신해야 화면이 확 돌아갔을때 레이저가 이상한 위치에 가있지 않음
@@ -402,6 +414,50 @@ GLuint LoadTexture(const char* filename)
 
     stbi_image_free(data);
     return tex;
+}
+
+void OpenDoor()
+{
+    auto& bx = g_map.GetBoxesMutable();
+
+    // 문 제거
+    if (g_map.doorIndex >= 0 && g_map.doorIndex < bx.size())
+    {
+        bx[g_map.doorIndex].size = glm::vec3(0, 0, 0);
+    }
+
+    // 키패드 제거
+    for (int i = g_map.keypadStartIndex; i <= g_map.keypadEndIndex; i++)
+    {
+        if (i >= 0 && i < bx.size())
+        {
+            bx[i].size = glm::vec3(0, 0, 0);
+        }
+    }
+
+}
+
+
+void OnDigitPressed(int d)
+{
+    std::cout << "[KEYPAD] Pressed: " << d << std::endl;
+    entered.push_back('0' + d);
+    std::cout << "[KEYPAD] Buffer: " << entered << std::endl;
+
+    if (entered.size() == password.size())
+    {
+
+        if (entered == password)
+        {
+            std::cout << "[KEYPAD] PASSWORD OK\n";
+            OpenDoor();
+        }
+        else
+        {
+            std::cout << "[KEYPAD] PASSWORD FAIL\n";
+            entered.clear();
+        }
+    }
 }
 
 GLvoid drawScene()
@@ -569,6 +625,37 @@ void KeyUp(unsigned char key, int x, int y)
 
 void MouseButton(int button, int state, int x, int y)
 {
+    //이거는 좌클릭인데 레이저 안나가고 내가 누른거 버퍼에 들어가게 하는거임
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+    {
+        glm::vec3 origin = g_player.camPos;
+        glm::vec3 dir = glm::normalize(g_player.camFront);
+
+        const auto& bx = g_map.GetBoxes();
+
+        int hit = -1;
+
+        for (int i = g_map.keypadStartIndex; i <= g_map.keypadEndIndex; i++)
+        {
+            glm::vec3 hp;
+            int face = -1;
+
+            if (g_lidar.Raycast(origin, dir, { bx[i] }, 1000.0f, hp, nullptr, &face))
+            {
+                hit = i;
+                break;
+            }
+        }
+
+        if (hit != -1)
+        {
+            int idx = hit - g_map.keypadStartIndex;
+            int digit = g_map.keypadDigits[idx];
+            OnDigitPressed(digit);
+            return;
+        }
+    }
+
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && !g_isScanning)
     {
         g_lidar.StartScan(
