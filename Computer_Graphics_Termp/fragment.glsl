@@ -58,7 +58,7 @@ void main()
             objectColor == vec3(0.25,0.25,0.25) ||// √—
             objectColor == vec3(1.0,0.0,0.0))     // ∑π¿Ã¿˙
         {
-            FragColor = vec4(baseColor, 1.0);
+            FragColor = vec4(lit, 1.0);
             return;
         }
 
