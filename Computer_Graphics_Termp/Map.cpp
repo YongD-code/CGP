@@ -198,16 +198,17 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall.color = glm::vec3(0.1f, 0.1f, 0.1f);
                 for (int f = 0; f < 6; f++)
                     CreateRevealMask(wall.revealMask[f]);
-                if (x == 7 && z == 26)
-                {
-                    wall.hasTex[1] = true;   // 앞면(face=1)
-                    wall.texID[1] = TextureManager::Get("footprint");
-                }
                 if (x == 1 && z == 22)
                 {
-                    wall.hasTex[3] = true;   // 앞면(face=1)
+                    wall.hasTex[3] = true;   // 오른쪽면
                     wall.texID[3] = TextureManager::Get("hint2");
                     wall.texFlipX[3] = true;
+                }
+                if (x == 7 && z == 12)
+                {
+                    wall.hasTex[0] = true;   // 뒷면 
+                    wall.texID[0] = TextureManager::Get("hint1");
+                    wall.texFlipX[0] = true;
                 }
                 boxes.push_back(wall);
 
@@ -218,6 +219,11 @@ void Map::InitFromArray(int w, int h, const int* data)
                 wall2.color = glm::vec3(0.1f, 0.1f, 0.1f);
                 for (int f = 0; f < 6; f++)
                     CreateRevealMask(wall2.revealMask[f]);
+                if (x == 5 && z == 5)
+                {
+                    wall2.hasTex[2] = true;   // 왼쪽면
+                    wall2.texID[2] = TextureManager::Get("hint4");
+                }
                 boxes.push_back(wall2);
             }
             bool makeCeil = false;
@@ -243,13 +249,13 @@ void Map::InitFromArray(int w, int h, const int* data)
             for (int f = 0; f < 6; f++)
                 CreateRevealMask(floor.revealMask[f]);
 
-            if (x == 6 && z == 25)
+            if (x == 6 && (z == 25||z == 26))
             {
                 floor.hasTex[5] = true;
                 floor.texID[5] = TextureManager::Get("footprint");
                 floor.texRot[5] = 1;
             }
-            if (x == 8 && z == 2)
+            if (x == 8 && (z == 2 || z == 3))
             {
                 floor.hasTex[5] = true;
                 floor.texID[5] = TextureManager::Get("footprint");
