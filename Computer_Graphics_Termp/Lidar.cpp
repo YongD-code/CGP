@@ -181,7 +181,7 @@ void Lidar::ScanSingleRay(const glm::vec3& origin, const glm::vec3& dir, const M
 
             glBindTexture(GL_TEXTURE_2D, b.revealMask[faceIndex]);
 
-            const int R = 6;
+            const int R = 4;
             unsigned char value = 255;
 
             for (int j = -R; j <= R; j++)
@@ -345,7 +345,7 @@ void Lidar::StartScan(const glm::vec3& origin,
     scan.boxes = boxes;
 
     scan.rowTimer = 0.0f;
-    scan.rowInterval = 0.03f;
+    scan.rowInterval = 0.05f;
     debugRays.clear();
 }
 
