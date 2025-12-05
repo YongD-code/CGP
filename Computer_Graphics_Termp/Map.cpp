@@ -97,14 +97,19 @@ void Map::Draw(
     GLint uViewLoc,
     GLint uProjLoc,
     GLint uColorLoc,
+    GLint uTexRotLoc,
+    GLint uHasTexLoc,
+    GLint uTextureLoc,
+    GLint uRevealMaskLoc,
     const glm::mat4& view,
     const glm::mat4& proj
 ) const
 {
-    GLint uTexRotLoc = glGetUniformLocation(shaderProgram, "uTexRot");
-
     glUseProgram(shaderProgram);
     glBindVertexArray(vaoCube);
+
+    glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
     for (const Box& b : boxes)
     {
@@ -113,8 +118,7 @@ void Map::Draw(
         model = glm::scale(model, b.size);
 
         glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
+        
         glUniform3fv(uColorLoc, 1, glm::value_ptr(b.color));
 
         for (int face = 0; face < 6; face++)
@@ -122,18 +126,18 @@ void Map::Draw(
             glUniform1i(uTexRotLoc, b.texRot[face]);
             if (b.hasTex[face])
             {
-                glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 1);
+                glUniform1i(uHasTexLoc, 1);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, b.texID[face]);
-                glUniform1i(glGetUniformLocation(shaderProgram, "uTexture"), 0);
+                glUniform1i(uTextureLoc, 0);
 
                 glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, b.revealMask[face]);
-                glUniform1i(glGetUniformLocation(shaderProgram, "uRevealMask"), 1);
+                glUniform1i(uRevealMaskLoc, 1);
             }
             else
             {
-                glUniform1i(glGetUniformLocation(shaderProgram, "uHasTex"), 0);
+                glUniform1i(uHasTexLoc, 0);
             }
 
             glDrawElements(

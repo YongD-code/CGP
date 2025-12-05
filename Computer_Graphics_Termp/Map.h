@@ -41,6 +41,10 @@ public:
         GLint uViewLoc,
         GLint uProjLoc,
         GLint uColorLoc,
+        GLint uTexRotLoc,
+        GLint uHasTexLoc,
+        GLint uTextureLoc,
+        GLint uRevealMaskLoc,
         const glm::mat4& view,
         const glm::mat4& proj
     ) const;

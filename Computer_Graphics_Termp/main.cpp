@@ -56,6 +56,11 @@ GLint uProjLoc = -1;
 GLint uColorLoc = -1;
 GLint uDarkModeLoc = -1;
 
+GLint uTexRotLoc = -1;
+GLint uHasTexLoc = -1;
+GLint uTextureLoc = -1;
+GLint uRevealMaskLoc = -1;
+
 bool cull = false;
 bool wire_mode = false;
 int lastTime = 0;
@@ -213,6 +218,15 @@ GLuint make_shaderProgram()
     uProjLoc = glGetUniformLocation(prog, "uProj");
     uColorLoc = glGetUniformLocation(prog, "objectColor");
     uDarkModeLoc = glGetUniformLocation(prog, "uDarkMode");
+
+    uTexRotLoc = glGetUniformLocation(prog, "uTexRot");
+    uHasTexLoc = glGetUniformLocation(prog, "uHasTex");
+    uTextureLoc = glGetUniformLocation(prog, "uTexture");
+    uRevealMaskLoc = glGetUniformLocation(prog, "uRevealMask");
+
+    // ¾ÈÀü»§
+    glUniform1i(uTextureLoc, 0);
+    glUniform1i(uRevealMaskLoc, 1);
 
 
     return prog;
@@ -412,7 +426,7 @@ GLvoid drawScene()
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
 
-    g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, view, proj);
+    g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, uTexRotLoc, uHasTexLoc, uTextureLoc, uRevealMaskLoc, view, proj);
 
     g_lidar.Draw(shaderProgramID,
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
