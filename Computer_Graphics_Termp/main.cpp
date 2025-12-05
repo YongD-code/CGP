@@ -57,6 +57,7 @@ GLint uColorLoc = -1;
 GLint uDarkModeLoc = -1;
 
 GLint uTexRotLoc = -1;
+GLint uFlipXLoc = -1;
 GLint uHasTexLoc = -1;
 GLint uTextureLoc = -1;
 GLint uRevealMaskLoc = -1;
@@ -135,6 +136,10 @@ void main(int argc, char** argv)
         return;
     }
     TextureManager::Load("footprint", "footprint.png");
+    TextureManager::Load("hint1", "keypad_hint1.png");
+    TextureManager::Load("hint2", "keypad_hint2.png");
+    TextureManager::Load("hint3", "keypad_hint3.png");
+    TextureManager::Load("hint4", "keypad_hint4.png");
     for (int i = 0; i < 10; i++)
     {
         TextureManager::Load(
@@ -232,9 +237,11 @@ GLuint make_shaderProgram()
     uDarkModeLoc = glGetUniformLocation(prog, "uDarkMode");
 
     uTexRotLoc = glGetUniformLocation(prog, "uTexRot");
+    uFlipXLoc = glGetUniformLocation(prog, "uFlipX");
     uHasTexLoc = glGetUniformLocation(prog, "uHasTex");
     uTextureLoc = glGetUniformLocation(prog, "uTexture");
     uRevealMaskLoc = glGetUniformLocation(prog, "uRevealMask");
+
 
     // ¾ÈÀü»§
     glUniform1i(uTextureLoc, 0);
@@ -344,37 +351,37 @@ GLvoid InitGL()
 
     int mapData[mapH][mapW] =
     {
-        {1,1,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0},//z 0
         {1,1,1,1,1,1,0,1,0,1,0,0,0,0,0,0,0},
         {1,0,0,0,0,1,1,1,0,1,1,1,1,1,0,0,0},
         {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0},
         {1,0,0,0,0,1,1,1,1,1,1,1,0,1,0,0,0},
-        {1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0},
+        {1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0},//z 5
         {1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0},
         {0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0},
         {0,0,0,0,0,1,0,0,1,1,1,1,1,1,0,0,0},
         {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0},//z 10
         {0,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0},
         {0,1,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1},
         {0,1,0,0,1,1,0,1,0,0,0,0,1,0,0,0,1},
         {0,1,0,0,1,1,0,1,0,0,0,0,1,0,0,0,1},
-        {0,1,0,0,1,1,0,1,1,1,1,1,0,0,0,0,1},
+        {0,1,0,0,1,1,0,1,1,1,1,1,0,0,0,0,1},//z 15
         {0,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1},
         {0,1,0,0,1,1,0,1,1,1,1,1,0,0,0,0,1},
         {0,1,0,0,1,1,0,1,0,0,0,0,1,0,0,0,1},
         {0,1,0,0,1,1,0,1,0,0,0,0,1,0,0,0,1},
-        {0,1,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1},
+        {0,1,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1},//z 20
         {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0},
         {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0},
         {0,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0},
-        {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0},
+        {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0},//z 25
         {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0},
         {0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0},
-        {0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0},
+        {0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0},//z 30
     };
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
@@ -471,7 +478,7 @@ GLvoid drawScene()
     float aspect = static_cast<float>(width) / static_cast<float>(height);
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 200.0f);
 
-    g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, uTexRotLoc, uHasTexLoc, uTextureLoc, uRevealMaskLoc, view, proj);
+    g_map.Draw(shaderProgramID, VAO_cube, uModelLoc, uViewLoc, uProjLoc, uColorLoc, uTexRotLoc, uHasTexLoc, uTextureLoc, uRevealMaskLoc,uFlipXLoc, view, proj);
 
     g_lidar.Draw(shaderProgramID,
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
