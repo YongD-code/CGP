@@ -30,6 +30,15 @@ struct Box
 class Map
 {
 public:
+    int doorIndex = -1;
+    int keypadStartIndex = -1;
+    int keypadEndIndex = -1;
+    std::vector<int> keypadDigits;
+
+    std::vector<Box>& GetBoxesMutable()
+    {
+        return boxes;
+    }
     // 테스트용 방
     void InitTestRoom();
 
