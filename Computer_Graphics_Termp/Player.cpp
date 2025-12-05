@@ -22,7 +22,7 @@ Player::Player()
     lastY = screenHeight * 0.5f;
     firstMouse = true;
 
-    moveSpeed = 60.0f;
+    moveSpeed = 18.0f;
     mouseSensitivity = 0.1f;
     ignoreMouse = false;
 
