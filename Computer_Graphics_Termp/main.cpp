@@ -425,13 +425,6 @@ GLvoid drawScene()
         g_player.camFront,
         g_player.camUp);
 
-    glPointSize(4.0f);
-    glBegin(GL_POINTS);
-    for (auto& p : g_lidar.GetPoints())
-    {
-        glVertex3f(p.x, p.y, p.z);
-    }
-    glEnd();
     g_lidar.UpdateScan(deltaTime);
 
     if (g_beam.active)
