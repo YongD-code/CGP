@@ -14,6 +14,7 @@ struct Box
     bool     hasTex[6];
     GLuint   texID[6];
     GLuint revealMask[6];
+
     Box()
     {
         for (int i = 0; i < 6; i++)

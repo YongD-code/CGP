@@ -1,6 +1,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Lidar.h"
 #include "Map.h"
+#include "AudioManager.h"
+#include "TextureManager.h"
 
 #include <algorithm>
 #include <cmath>
@@ -397,8 +399,25 @@ void Lidar::UpdateScan(float deltaTime)
         {
             AddHitPoint(hit);
 
-            // ★ 여기에서 revealMask 칠하기
+            // 여기에서 revealMask 칠하기
             Box& b = scan.boxes[boxIndex];
+
+            GLuint humanTex = TextureManager::Get("human");
+            bool isHumanFace = (b.texID[faceIndex] == humanTex);
+
+            if (isHumanFace && !humanSoundPlayed)
+            {
+                // 한 번 맞을 때마다 조금씩 올림
+                humanRevealScore += 0.002f;
+
+                const float PLAYSOUND = 0.3f;   // 이 값을 넘으면 플레이
+
+                if (humanRevealScore >= PLAYSOUND)
+                {
+                    AudioManager::Instance().Play("footstep_stranger");
+                    humanSoundPlayed = true;
+                }
+            }
 
             float u, v;
             ComputeFaceUV(b, faceIndex, b.texRot[faceIndex], hit, u, v);

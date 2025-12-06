@@ -208,8 +208,10 @@ void main(int argc, char** argv)
     {
         AudioManager::Instance().LoadSound("footL", "foot_left.wav", false);
         AudioManager::Instance().LoadSound("footR", "foot_right.wav", false);
+        AudioManager::Instance().LoadSound("footstep_stranger", "footstep_stranger.mp3", false);
         AudioManager::Instance().LoadSound("bgm", "bgm.mp3", true);
         AudioManager::Instance().Play("bgm");
+        AudioManager::Instance().SetVolume("bgm", 0.5f);
     }
     InitGL();
 

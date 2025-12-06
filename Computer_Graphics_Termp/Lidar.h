@@ -99,5 +99,8 @@ private:
 
     std::vector<glm::vec3> debugRays;
 
+    float humanRevealScore = 0.0f;   // human이 얼마나 스캔됐는지 대충 누적
+    bool  humanSoundPlayed = false;
+
     void AddHitPoint(const glm::vec3& p);
 };
