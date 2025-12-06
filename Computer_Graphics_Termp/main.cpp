@@ -80,6 +80,10 @@ bool g_doorOpening = false;
 float g_doorFallY = 0.0f;
 float g_doorFallSpeed = 6.0f;
 
+bool g_doorOpened = false;
+glm::vec3 g_exitMin(0.0f);
+glm::vec3 g_exitMax(0.0f);
+
 struct ScanBeam
 {
     bool        active;
@@ -515,6 +519,24 @@ GLvoid InitGL()
     };
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);
+    
+    // Å»Ãâ Á¸ »ý¼º
+    {
+        const std::vector<Box>& boxes = g_map.GetBoxes();
+        if (g_map.doorIndex >= 0 && g_map.doorIndex < (int)boxes.size())
+        {
+            const Box& door = boxes[g_map.doorIndex];
+
+            glm::vec3 c = door.pos;
+            glm::vec3 half = door.size * 0.5f;
+
+            float padding = 0.5f; // ¹®º¸´Ù »ìÂ¦ ³Ð°Ô Àâ±â
+
+            g_exitMin = glm::vec3(c.x - half.x - padding, 0.0f, c.z - half.z - padding);
+            g_exitMax = glm::vec3(c.x + half.x + padding, 10.0f, c.z + half.z + padding);
+        }
+    }
+
     g_gun.Load("Gun.obj");
     g_lidar.Init();
 
@@ -588,6 +610,13 @@ void OnDigitPressed(int d)
             entered.clear();
         }
     }
+}
+
+bool IsPlayerInExitZone()
+{
+    glm::vec3 p = g_player.GetPosition();
+
+    return (p.x >= g_exitMin.x && p.x <= g_exitMax.x && p.z >= g_exitMin.z && p.z <= g_exitMax.z);
 }
 
 GLvoid drawScene()
@@ -899,8 +928,17 @@ GLvoid drawScene()
             }
 
             g_doorOpening = false;
+            g_doorOpened = true;
         }
     }
+
+    if (g_doorOpened && IsPlayerInExitZone())
+    {
+        std::cout << "GAME CLEAR\n";
+        glutLeaveMainLoop();
+        return;
+    }
+
     glutSwapBuffers();
     glutPostRedisplay();
 }
