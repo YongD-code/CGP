@@ -189,7 +189,7 @@ void main(int argc, char** argv)
     }
     InitGL();
 
-    const int mapW = 17;
+    const int mapW = 17; 
     const int mapH = 31;
     const float cellSize = 4.0f;
     const float wallHeight = 4.0f;
@@ -204,34 +204,48 @@ void main(int argc, char** argv)
     float x3 = (7.0f - mapW / 2.0f) * cellSize + cellSize * 0.5f;
     float z3 = (6.0f - mapH / 2.0f) * cellSize + cellSize * 0.5f;
 
-    int boxIdx = g_map.scareBoxStartIndex;
+    int boxIdx = g_map.scareBoxStartIndex; 
 
-    g_scareEvents.push_back({
-        glm::vec3(x1, wallHeight * 0.5f, z1),
-        5.0f,
-        "scary1",
-        false,
-        boxIdx++,
-        1
-        });
+    auto& bx = g_map.GetBoxesMutable();
 
-    g_scareEvents.push_back({
-        glm::vec3(x2, wallHeight * 0.5f, z2),
-        5.0f,
-        "scary2",
-        false,
-        boxIdx++,
-        2
-        });
+    if (boxIdx >= 0 && boxIdx < bx.size())
+    {
+        g_scareEvents.push_back({
+            glm::vec3(x1, wallHeight * 0.5f, z1),
+            5.0f,
+            "scary1",
+            false,
+            boxIdx++,
+            1
+            });
+        bx[g_scareEvents.back().boxIndex].texID[g_scareEvents.back().targetFaceIndex] = TextureManager::Get("scary1");
+    }
 
-    g_scareEvents.push_back({
-        glm::vec3(x3, wallHeight * 0.5f, z3),
-        5.0f,
-        "scary3",
-        false,
-        boxIdx++,
-        1
-        });
+    if (boxIdx >= 0 && boxIdx < bx.size())
+    {
+        g_scareEvents.push_back({
+            glm::vec3(x2, wallHeight * 0.5f, z2),
+            5.0f,
+            "scary2",
+            false,
+            boxIdx++,
+            1
+            });
+        bx[g_scareEvents.back().boxIndex].texID[g_scareEvents.back().targetFaceIndex] = TextureManager::Get("scary2");
+    }
+
+    if (boxIdx >= 0 && boxIdx < bx.size())
+    {
+        g_scareEvents.push_back({
+            glm::vec3(x3, wallHeight * 0.5f, z3),
+            5.0f,
+            "scary3",
+            false,
+            boxIdx++,
+            1
+            });
+        bx[g_scareEvents.back().boxIndex].texID[g_scareEvents.back().targetFaceIndex] = TextureManager::Get("scary3");
+    }
 
 
     glutDisplayFunc(drawScene);
@@ -608,50 +622,46 @@ GLvoid drawScene()
         g_player.camUp);
 
     auto& bx = g_map.GetBoxesMutable();
-    const float CAMERA_DISTANCE = 1.5f; // 사진이 잘리지 않도록 거리를 1.5f로 설정
+    const float CAMERA_DISTANCE = 1.5f; 
+    const float BOX_SIZE = 1.7f;        
 
     for (size_t i = 0; i < g_scareEvents.size(); ++i)
     {
-        // 유효성 검사 (코드 간결화를 위해 인덱스가 유효하다고 가정)
-        if (i >= g_scareEvents.size() || i >= std::size(g_scareActiveTimers)) continue;
-        if (g_scareEvents[i].boxIndex < 0 || g_scareEvents[i].boxIndex >= bx.size()) continue;
+        if (i >= std::size(g_scareActiveTimers)) continue;
 
         ScareEvent& event = g_scareEvents[i];
         int boxIdx = event.boxIndex;
+
+        if (boxIdx < 0 || boxIdx >= bx.size()) continue;
+
         Box& scareBox = bx[boxIdx];
 
-        // Phase 1: Trigger 체크 (이미 발동되지 않았고, 타이머가 비활성화된 경우)
         if (!event.isTriggered && g_scareActiveTimers[i] <= 0.0f)
         {
             bool isPlayerScanning = g_isScanning || g_lidar.IsScanActive();
 
             if (isPlayerScanning)
             {
-                // [핵심] 1. Raycast 충돌 판정을 위해 임시로 박스 크기를 키웁니다.
-                scareBox.size = glm::vec3(1.0f, 1.0f, 1.0f);
-                scareBox.pos = event.triggerPoint; // 충돌 감지 위치로 이동
+                scareBox.size = glm::vec3(event.triggerRadius, event.triggerRadius, event.triggerRadius);
+                scareBox.pos = event.triggerPoint;
 
                 glm::vec3 hitPos;
                 int hitBox = -1;
                 int hitFace = -1;
 
-                // Raycast 실행
                 if (g_lidar.Raycast(g_player.camPos,
                     glm::normalize(g_player.camFront),
                     g_map.GetBoxes(),
                     100.0f, hitPos,
                     &hitBox, &hitFace))
                 {
-                    // 2. 맞춘 박스가 현재 이벤트의 박스이고, 타겟 면을 맞췄을 때
-                    if (hitBox == boxIdx && hitFace == event.targetFaceIndex)
+                    if (hitBox == boxIdx)
                     {
-                        event.isTriggered = true;
                         g_scareActiveTimers[i] = SCARE_DURATION;
-                        std::cout << "[SCARE] Jumpscare Ray HIT: " << event.textureName << " Triggered!" << std::endl;
+                        std::cout << "[SCARE] Jumpscare HIT: " << event.textureName << " Triggered! Active Timer: " << SCARE_DURATION << std::endl;
                     }
                 }
 
-                // 3. 발동되지 않았다면 충돌 검사 후 즉시 크기를 0으로 축소 및 숨김
                 if (!event.isTriggered) {
                     scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
                     scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
@@ -659,21 +669,52 @@ GLvoid drawScene()
             }
         }
 
-        // Phase 2: 활성화 타이머 처리 (발동된 경우)
         if (g_scareActiveTimers[i] > 0.0f)
         {
             g_scareActiveTimers[i] -= deltaTime;
 
             if (g_scareActiveTimers[i] > 0.0f)
             {
-                // 활성화: 카메라 앞에 얇은 사각형 표시
                 glm::vec3 pos = g_player.camPos + g_player.camFront * CAMERA_DISTANCE;
                 scareBox.pos = pos;
-                scareBox.size = glm::vec3(1.0f, 1.0f, 0.001f);
+                scareBox.size = glm::vec3(BOX_SIZE * aspect, BOX_SIZE, 0.001f);
+
+                glm::mat4 rotMatrix = glm::lookAt(glm::vec3(0, 0, 0), g_player.camFront, g_player.camUp);
+                rotMatrix = glm::inverse(rotMatrix);
+
+                glm::mat4 modelScare = glm::translate(glm::mat4(1.0f), scareBox.pos);
+                modelScare *= rotMatrix;
+                modelScare = glm::scale(modelScare, scareBox.size);
+
+                glUseProgram(shaderProgramID);
+                glBindVertexArray(VAO_cube);
+                glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(modelScare));
+                glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
+                glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
+                glUniform3fv(uColorLoc, 1, glm::value_ptr(scareBox.color));
+
+                glUniform1i(uTexRotLoc, scareBox.texRot[1]);
+                glUniform1i(uFlipXLoc, scareBox.texFlipX[1] ? 1 : 0);
+                glUniform1i(uHasTexLoc, 1);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, scareBox.texID[1]);
+                glUniform1i(uTextureLoc, 0);
+
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, scareBox.revealMask[1]);
+                glUniform1i(uRevealMaskLoc, 1);
+
+                glDrawElements(
+                    GL_TRIANGLES,
+                    6,
+                    GL_UNSIGNED_INT,
+                    (void*)(sizeof(unsigned int) * 1 * 6)
+                );
+
+                glBindVertexArray(0);
             }
             else
             {
-                // 비활성화: 박스를 완전히 숨김
                 scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
                 scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
             }

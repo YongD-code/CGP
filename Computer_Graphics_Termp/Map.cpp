@@ -315,26 +315,18 @@ void Map::InitFromArray(int w, int h, const int* data)
         keypadEndIndex = boxes.size() - 1;
     }
 
+    scareBoxStartIndex = boxes.size(); 
+
+    for (int i = 0; i < 3; ++i)
     {
-        scareBoxStartIndex = boxes.size();
+        Box scareBox;
+        scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
+        scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
+        scareBox.color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        for (int i = 1; i <= 3; i++) //´õ ´Ã¸±°Å¸é ¼ýÀÚ ´Ã¸®¸é µÊ
-        {
-            Box scare;
-            scare.size = glm::vec3(0.0f, 0.0f, 0.0f);
-            scare.pos = glm::vec3(0.0f, -9999.0f, 0.0f); 
-            scare.color = glm::vec3(1.0f, 1.0f, 1.0f); 
-
-            for (int f = 0; f < 6; f++) CreateRevealMask(scare.revealMask[f]);
-
-            scare.hasTex[1] = true;   
-
-            scare.texID[1] = TextureManager::Get("scary" + std::to_string(i)); //ÀÌ¸§Àº scary1,2,3 ÀÌ·±½ÄÀ¸·Î Áþ°í
-
-            boxes.push_back(scare);
-        }
-
-        scareBoxEndIndex = boxes.size() - 1;
+        scareBox.hasTex[1] = true;
+        CreateRevealMask(scareBox.revealMask[1]); 
+        boxes.push_back(scareBox);
     }
 }
 
