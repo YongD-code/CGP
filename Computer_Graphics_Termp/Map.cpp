@@ -147,6 +147,12 @@ void Map::InitFromArray(int w, int h, const int* data)
                     wall.hasTex[2] = true;
                     wall.texID[2] = TextureManager::Get("human");
                 }
+                if (x == 5 && z == 18)
+                {
+                    wall.hasTex[3] = true;
+                    wall.texID[3] = TextureManager::Get("help");
+                    wall.texFlipX[3] = true;
+                }
                 boxes.push_back(wall);
                 
                 Box wall2;
