@@ -128,6 +128,19 @@ bool IsInputLocked()
     return g_lidar.IsScanActive();
 }
 
+bool IsScareActive()
+{
+
+    for (int i = 0; i < 3; ++i)
+    {
+        if (g_scareActiveTimers[i] > 0.0f)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static std::string readTextFile(const char* path)
 {
     std::ifstream ifs(path, std::ios::binary);
@@ -562,7 +575,17 @@ GLvoid drawScene()
     float deltaTime = (now - lastTime) * 0.001f;
     lastTime = now;
     g_beamTime += deltaTime;
+    bool scareActive = IsScareActive();
 
+    if (scareActive)
+    {
+
+        g_isScanning = false;
+        g_beam.active = false;
+        g_beam.curLength = 0.0f;
+        g_beam.tailTime = 0.0f;
+
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
     glUniform1i(uDarkModeLoc, g_darkMode ? 1 : 0);
@@ -922,7 +945,8 @@ void MouseButton(int button, int state, int x, int y)
             return;
         }
     }
-
+    if (IsScareActive())
+        return;
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && !g_isScanning)
     {
         g_lidar.StartScan(
@@ -958,7 +982,7 @@ void MouseMotion(int x, int y)
 {
     g_player.OnMouseMotion(x, y);
 
-    if (g_isScanning)
+    if (g_isScanning && !IsScareActive())
     {
         glm::vec3 origin = g_player.GetPosition();
         glm::vec3 front = g_player.GetFront();
