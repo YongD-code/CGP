@@ -35,6 +35,8 @@ public:
     int keypadStartIndex = -1;
     int keypadEndIndex = -1;
     std::vector<int> keypadDigits;
+    int scareBoxStartIndex = -1;
+    int scareBoxEndIndex = -1;
 
     std::vector<Box>& GetBoxesMutable()
     {

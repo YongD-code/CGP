@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 #include <gl/glm/gtc/type_ptr.hpp>
 #include <gl/glm/gtx/quaternion.hpp>

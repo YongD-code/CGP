@@ -94,6 +94,35 @@ struct ScanBeam
 ScanBeam g_beam{};
 float g_beamTime = 0.0f;
 
+
+struct ScareEvent {
+    glm::vec3 triggerPoint;    
+    float triggerRadius = 5.0f; 
+    std::string textureName;  
+    bool isTriggered = false;   // 이미 발동되었는지 여부 (한 번만 발동되도록)
+    int boxIndex = -1;          // 맵의 Box 목록에서 이 이벤트를 위해 예약된 Box의 인덱스
+    int targetFaceIndex = 1;
+};
+
+std::vector<ScareEvent> g_scareEvents;
+const float SCARE_DURATION = 0.5f; 
+
+
+float g_scareActiveTimers[3] = { 0.0f, 0.0f, 0.0f };
+
+const std::vector<glm::vec3> DEBUG_TRIGGER_POINTS = {
+    // 1. (x=3.0, z=11.0) -> (-28.0f, 2.0f, -16.0f)
+    glm::vec3(-28.0f, 2.0f, -16.0f),
+
+    // 2. (x=15.0, z=15.0) -> (28.0f, 2.0f, 0.0f)
+    glm::vec3(32.0f, 2.0f, 0.0f),
+
+    // 3. (x=7.0, z=6.0) -> (-4.0f, 2.0f, -36.0f)
+    glm::vec3(-4.0f, 2.0f, -36.0f)
+};
+
+bool g_showDebugPoints = true; //디버깅 안할때는 false로 바꾸고
+
 bool IsInputLocked()
 {
     return g_lidar.IsScanActive();
@@ -148,6 +177,9 @@ void main(int argc, char** argv)
     TextureManager::Load("rule", "rule.png");
     TextureManager::Load("project", "project.png");
     TextureManager::Load("help", "message_help.png");
+    TextureManager::Load("scary1", "scary1.png");
+    TextureManager::Load("scary2", "scary2.png");
+    TextureManager::Load("scary3", "scary3.png");
     for (int i = 0; i < 10; i++)
     {
         TextureManager::Load(
@@ -156,6 +188,51 @@ void main(int argc, char** argv)
         );
     }
     InitGL();
+
+    const int mapW = 17;
+    const int mapH = 31;
+    const float cellSize = 4.0f;
+    const float wallHeight = 4.0f;
+
+    //앞에 2개 좌표 수정하면 됨 계산해놓은거
+    float x1 = (3.0f - mapW / 2.0f) * cellSize + cellSize * 0.5f;
+    float z1 = (11.0f - mapH / 2.0f) * cellSize + cellSize * 0.5f;
+
+    float x2 = (16.0f - mapW / 2.0f) * cellSize + cellSize * 0.5f;
+    float z2 = (15.0f - mapH / 2.0f) * cellSize + cellSize * 0.5f;
+
+    float x3 = (7.0f - mapW / 2.0f) * cellSize + cellSize * 0.5f;
+    float z3 = (6.0f - mapH / 2.0f) * cellSize + cellSize * 0.5f;
+
+    int boxIdx = g_map.scareBoxStartIndex;
+
+    g_scareEvents.push_back({
+        glm::vec3(x1, wallHeight * 0.5f, z1),
+        5.0f,
+        "scary1",
+        false,
+        boxIdx++,
+        1
+        });
+
+    g_scareEvents.push_back({
+        glm::vec3(x2, wallHeight * 0.5f, z2),
+        5.0f,
+        "scary2",
+        false,
+        boxIdx++,
+        2
+        });
+
+    g_scareEvents.push_back({
+        glm::vec3(x3, wallHeight * 0.5f, z3),
+        5.0f,
+        "scary3",
+        false,
+        boxIdx++,
+        1
+        });
+
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
@@ -493,6 +570,32 @@ GLvoid drawScene()
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
         view, proj);
 
+    if (g_showDebugPoints)
+    {
+        glUseProgram(shaderProgramID);
+        glDisable(GL_DEPTH_TEST);
+        glm::mat4 model = glm::mat4(1.0f);
+        glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+        glm::vec3 debugColor(1.0f, 0.0f, 0.0f);
+        glUniform3fv(uColorLoc, 1, glm::value_ptr(debugColor));
+
+        glPointSize(10.0f); 
+
+        glBegin(GL_POINTS);
+        for (const auto& point : DEBUG_TRIGGER_POINTS)
+        {
+
+            glVertex3f(point.x, point.y + 0.1f, point.z);
+        }
+        glEnd();
+
+        glPointSize(4.0f); 
+        glEnable(GL_DEPTH_TEST);
+    }
+
     glClear(GL_DEPTH_BUFFER_BIT);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -504,6 +607,78 @@ GLvoid drawScene()
         g_player.camFront,
         g_player.camUp);
 
+    auto& bx = g_map.GetBoxesMutable();
+    const float CAMERA_DISTANCE = 1.5f; // 사진이 잘리지 않도록 거리를 1.5f로 설정
+
+    for (size_t i = 0; i < g_scareEvents.size(); ++i)
+    {
+        // 유효성 검사 (코드 간결화를 위해 인덱스가 유효하다고 가정)
+        if (i >= g_scareEvents.size() || i >= std::size(g_scareActiveTimers)) continue;
+        if (g_scareEvents[i].boxIndex < 0 || g_scareEvents[i].boxIndex >= bx.size()) continue;
+
+        ScareEvent& event = g_scareEvents[i];
+        int boxIdx = event.boxIndex;
+        Box& scareBox = bx[boxIdx];
+
+        // Phase 1: Trigger 체크 (이미 발동되지 않았고, 타이머가 비활성화된 경우)
+        if (!event.isTriggered && g_scareActiveTimers[i] <= 0.0f)
+        {
+            bool isPlayerScanning = g_isScanning || g_lidar.IsScanActive();
+
+            if (isPlayerScanning)
+            {
+                // [핵심] 1. Raycast 충돌 판정을 위해 임시로 박스 크기를 키웁니다.
+                scareBox.size = glm::vec3(1.0f, 1.0f, 1.0f);
+                scareBox.pos = event.triggerPoint; // 충돌 감지 위치로 이동
+
+                glm::vec3 hitPos;
+                int hitBox = -1;
+                int hitFace = -1;
+
+                // Raycast 실행
+                if (g_lidar.Raycast(g_player.camPos,
+                    glm::normalize(g_player.camFront),
+                    g_map.GetBoxes(),
+                    100.0f, hitPos,
+                    &hitBox, &hitFace))
+                {
+                    // 2. 맞춘 박스가 현재 이벤트의 박스이고, 타겟 면을 맞췄을 때
+                    if (hitBox == boxIdx && hitFace == event.targetFaceIndex)
+                    {
+                        event.isTriggered = true;
+                        g_scareActiveTimers[i] = SCARE_DURATION;
+                        std::cout << "[SCARE] Jumpscare Ray HIT: " << event.textureName << " Triggered!" << std::endl;
+                    }
+                }
+
+                // 3. 발동되지 않았다면 충돌 검사 후 즉시 크기를 0으로 축소 및 숨김
+                if (!event.isTriggered) {
+                    scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
+                    scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
+                }
+            }
+        }
+
+        // Phase 2: 활성화 타이머 처리 (발동된 경우)
+        if (g_scareActiveTimers[i] > 0.0f)
+        {
+            g_scareActiveTimers[i] -= deltaTime;
+
+            if (g_scareActiveTimers[i] > 0.0f)
+            {
+                // 활성화: 카메라 앞에 얇은 사각형 표시
+                glm::vec3 pos = g_player.camPos + g_player.camFront * CAMERA_DISTANCE;
+                scareBox.pos = pos;
+                scareBox.size = glm::vec3(1.0f, 1.0f, 0.001f);
+            }
+            else
+            {
+                // 비활성화: 박스를 완전히 숨김
+                scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
+                scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+        }
+    }
     g_lidar.UpdateScan(deltaTime);
 
     if (g_beam.active)
