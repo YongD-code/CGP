@@ -141,6 +141,7 @@ void main(int argc, char** argv)
     TextureManager::Load("hint3", "keypad_hint3.png");
     TextureManager::Load("hint4", "keypad_hint4.png");
     TextureManager::Load("background", "keypad_bg.png");
+    TextureManager::Load("human", "human.png");
     for (int i = 0; i < 10; i++)
     {
         TextureManager::Load(
@@ -383,6 +384,7 @@ GLvoid InitGL()
         {0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0},
         {0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0},
         {0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0},//z 30
+// x =   0   2   4   6   8  10  12  14  16 
     };
 
     g_map.InitFromArray(mapW, mapH, &mapData[0][0]);

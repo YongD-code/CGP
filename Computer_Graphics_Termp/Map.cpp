@@ -142,9 +142,13 @@ void Map::InitFromArray(int w, int h, const int* data)
                     wall.texID[0] = TextureManager::Get("hint1");
                     wall.texFlipX[0] = true;
                 }
+                if (x == 13 && z == 5)
+                {
+                    wall.hasTex[2] = true;
+                    wall.texID[2] = TextureManager::Get("human");
+                }
                 boxes.push_back(wall);
-
-
+                
                 Box wall2;
                 wall2.size = glm::vec3(cellSize, wallHeight, cellSize);
                 wall2.pos = glm::vec3(fx, wallHeight * 1.5f - 0.5f, fz);
