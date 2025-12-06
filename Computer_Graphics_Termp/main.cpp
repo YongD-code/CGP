@@ -210,8 +210,12 @@ void main(int argc, char** argv)
         AudioManager::Instance().LoadSound("footR", "foot_right.wav", false);
         AudioManager::Instance().LoadSound("footstep_stranger", "footstep_stranger.mp3", false);
         AudioManager::Instance().LoadSound("bgm", "bgm.mp3", true);
+        AudioManager::Instance().LoadSound("keypad_press", "beep.mp3", false);
+        AudioManager::Instance().LoadSound("keypad_ok", "beep_beep_success.mp3", false);
+        AudioManager::Instance().LoadSound("keypad_fail", "beep_beep_wrong.mp3", false);
+        AudioManager::Instance().LoadSound("door_open", "door_slide_down.mp3", false);
         AudioManager::Instance().Play("bgm");
-        AudioManager::Instance().SetVolume("bgm", 0.5f);
+        AudioManager::Instance().SetVolume("bgm", 0.3f);
     }
     InitGL();
 
@@ -556,6 +560,7 @@ void OpenDoor()
 {
     g_doorOpening = true;
     g_doorFallY = 0.0f;
+    AudioManager::Instance().Play("door_open");
 }
 
 
@@ -563,6 +568,7 @@ void OnDigitPressed(int d)
 {
     //디버깅용 콘솔창에서 뭐 눌렸는지 확인해보기 위해서 일단 넣어놓음
     std::cout << "[KEYPAD] Pressed: " << d << std::endl;
+    AudioManager::Instance().Play("keypad_press");
     entered.push_back('0' + d);
     std::cout << "[KEYPAD] Buffer: " << entered << std::endl;
 
@@ -572,11 +578,13 @@ void OnDigitPressed(int d)
         if (entered == password)
         {
             std::cout << "[KEYPAD] PASSWORD OK\n";
+            AudioManager::Instance().Play("keypad_ok");
             OpenDoor();
         }
         else
         {
             std::cout << "[KEYPAD] PASSWORD FAIL\n";
+            AudioManager::Instance().Play("keypad_fail");
             entered.clear();
         }
     }
