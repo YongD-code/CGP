@@ -485,6 +485,10 @@ GLvoid drawScene()
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
         view, proj);
 
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+
     g_gun.Draw(shaderProgramID,
         uModelLoc, uViewLoc, uProjLoc, uColorLoc,
         view, proj,
