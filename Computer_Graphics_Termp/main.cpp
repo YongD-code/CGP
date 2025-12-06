@@ -10,9 +10,6 @@
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
 
-#include <fmod.hpp>
-#include <fmod_errors.h>
-
 #include <gl/glm/glm.hpp>
 #include <gl/glm/ext.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
@@ -25,6 +22,7 @@
 #include "Lidar.h"
 #include "stb_image.h"
 #include "TextureManager.h"
+#include "AudioManager.h"
 
 using std::cout;
 using std::endl;
@@ -201,6 +199,17 @@ void main(int argc, char** argv)
             "digit_" + std::to_string(i),
             "digit_" + std::to_string(i) + ".png"
         );
+    }
+    if (!AudioManager::Instance().Init())
+    {
+        std::cerr << "AudioManager 초기화 실패\n";
+    }
+    else
+    {
+        AudioManager::Instance().LoadSound("footL", "foot_left.wav", false);
+        AudioManager::Instance().LoadSound("footR", "foot_right.wav", false);
+        AudioManager::Instance().LoadSound("bgm", "bgm.mp3", true);
+        AudioManager::Instance().Play("bgm");
     }
     InitGL();
 
@@ -579,6 +588,8 @@ GLvoid drawScene()
     g_beamTime += deltaTime;
     bool scareActive = IsScareActive();
 
+    AudioManager::Instance().Update();
+
     if (scareActive)
     {
         g_isScanning = false;
@@ -911,7 +922,11 @@ void KeyDown(unsigned char key, int x, int y)
         g_darkMode = !g_darkMode;
     }
 
-    if (key == 27) glutLeaveMainLoop();
+    if (key == 27)
+    {
+        AudioManager::Instance().Release();
+        glutLeaveMainLoop();
+    }
 
     if (IsInputLocked())
         return;

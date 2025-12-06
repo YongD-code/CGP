@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Map.h"
+#include "AudioManager.h"
 
 #include <gl/freeglut.h>
 #include <gl/glm/gtc/matrix_transform.hpp>
@@ -22,12 +23,16 @@ Player::Player()
     lastY = screenHeight * 0.5f;
     firstMouse = true;
 
-    moveSpeed = 18.0f;
+    moveSpeed = 5.0f;
     mouseSensitivity = 0.1f;
     ignoreMouse = false;
 
     eyeHeight = 1.f;
     playerRadius = 0.5f;
+
+    footstepTimer = 0.0f;
+    bool  wasMoving = false;
+    nextLeftStep = true;    // 국룰은 왼발부터
 
     for (int i = 0; i < 256; ++i)
     {
@@ -142,6 +147,7 @@ glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt, const Map& map)
         moveDir = glm::normalize(moveDir);
     }
 
+    glm::vec3 oldPos = camPos;
     glm::vec3 newPos = camPos;
 
     // XZ평면 이동, 충돌 체크
@@ -169,6 +175,37 @@ glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt, const Map& map)
     // 일정 y값 유지
     newPos.y = eyeHeight;
     camPos = newPos;
+
+    glm::vec3 delta = newPos - oldPos;
+    float moveLenXZ = glm::length(glm::vec2(delta.x, delta.z));
+
+    bool isMovingThisFrame = (moveLenXZ > 0.001f);
+
+    const float FIRST_STEP_DELAY = 0.3;
+    const float STEP_INTERVAL = 1.f;
+
+    if (isMovingThisFrame)
+    {
+        if (!wasMoving)
+        {
+            wasMoving = true;
+            footstepTimer = FIRST_STEP_DELAY;
+        }
+
+        footstepTimer -= dt;
+        if (footstepTimer <= 0.0f)
+        {
+            const char* stepName = nextLeftStep ? "footL" : "footR";
+            AudioManager::Instance().Play(stepName);
+            nextLeftStep = !nextLeftStep;
+            footstepTimer = STEP_INTERVAL;
+        }
+    }
+    else
+    {
+        wasMoving = false;
+        footstepTimer = 0.0f;
+    }
 
     return glm::lookAt(camPos, camPos + camFront, camUp);
 }

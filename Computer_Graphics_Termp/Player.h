@@ -56,5 +56,9 @@ private:
     float eyeHeight;    // 바닥에서 눈까지 높이
     float playerRadius; // 벽과의 거리
 
+    float footstepTimer;
+    bool  wasMoving;
+    bool  nextLeftStep;
+
     bool CheckCollisionXZ(const glm::vec3& testPos, const Map& map) const;
 };
