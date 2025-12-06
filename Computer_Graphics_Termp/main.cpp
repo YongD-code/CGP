@@ -146,6 +146,7 @@ void main(int argc, char** argv)
     TextureManager::Load("background", "keypad_bg.png");
     TextureManager::Load("human", "human.png");
     TextureManager::Load("rule", "rule.png");
+    TextureManager::Load("project", "project.png");
     TextureManager::Load("help", "message_help.png");
     for (int i = 0; i < 10; i++)
     {

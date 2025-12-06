@@ -172,6 +172,12 @@ void Map::InitFromArray(int w, int h, const int* data)
                     wall2.hasTex[2] = true;   // ¿ÞÂÊ¸é
                     wall2.texID[2] = TextureManager::Get("hint4");
                 }
+                if (x == 6 && z == 30)
+                {
+                    wall2.hasTex[0] = true;   // µÞ¸é 
+                    wall2.texID[0] = TextureManager::Get("project");
+                    wall2.texFlipX[0] = true;
+                }
                 boxes.push_back(wall2);
             }
             bool makeCeil = false;
