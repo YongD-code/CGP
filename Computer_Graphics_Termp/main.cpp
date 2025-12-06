@@ -75,6 +75,7 @@ GunRenderer g_gun;
 
 bool g_isScanning = false;
 bool g_darkMode = false;
+bool g_isFanBeam = false;
 std::string password = "1209";
 std::string entered = "";
 bool g_doorOpening = false;
@@ -102,6 +103,8 @@ struct ScareEvent {
     bool isTriggered = false;   // 이미 발동되었는지 여부 (한 번만 발동되도록)
     int boxIndex = -1;          // 맵의 Box 목록에서 이 이벤트를 위해 예약된 Box의 인덱스
     int targetFaceIndex = 1;
+    float coolDownDuration = 5.0f;
+    float coolDownTimer = 0.0f;
 };
 
 std::vector<ScareEvent> g_scareEvents;
@@ -118,7 +121,7 @@ const std::vector<glm::vec3> DEBUG_TRIGGER_POINTS = {
     glm::vec3(32.0f, 2.0f, 0.0f),
 
     // 3. (x=7.0, z=6.0) -> (-4.0f, 2.0f, -36.0f)
-    glm::vec3(-4.0f, 2.0f, -36.0f)
+    glm::vec3(-8.0f, 2.0f, -36.0f)
 };
 
 bool g_showDebugPoints = true; //디버깅 안할때는 false로 바꾸고
@@ -130,10 +133,9 @@ bool IsInputLocked()
 
 bool IsScareActive()
 {
-
-    for (int i = 0; i < 3; ++i)
+    for (float timer : g_scareActiveTimers)
     {
-        if (g_scareActiveTimers[i] > 0.0f)
+        if (timer > 0.0f)
         {
             return true;
         }
@@ -579,12 +581,15 @@ GLvoid drawScene()
 
     if (scareActive)
     {
-
         g_isScanning = false;
-        g_beam.active = false;
-        g_beam.curLength = 0.0f;
-        g_beam.tailTime = 0.0f;
 
+        if (g_isFanBeam)
+        {
+            g_beam.active = false;
+            g_beam.curLength = 0.0f;
+            g_beam.tailTime = 0.0f;
+            g_isFanBeam = false;
+        }
     }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
@@ -646,7 +651,7 @@ GLvoid drawScene()
 
     auto& bx = g_map.GetBoxesMutable();
     const float CAMERA_DISTANCE = 1.5f; 
-    const float BOX_SIZE = 1.7f;        
+    const float BOX_SIZE = 1.8f;        
 
     for (size_t i = 0; i < g_scareEvents.size(); ++i)
     {
@@ -659,7 +664,11 @@ GLvoid drawScene()
 
         Box& scareBox = bx[boxIdx];
 
-        if (!event.isTriggered && g_scareActiveTimers[i] <= 0.0f)
+        if (event.coolDownTimer > 0.0f) {
+            event.coolDownTimer -= deltaTime;
+        }
+
+        if (event.coolDownTimer <= 0.0f && g_scareActiveTimers[i] <= 0.0f)
         {
             bool isPlayerScanning = g_isScanning || g_lidar.IsScanActive();
 
@@ -681,11 +690,12 @@ GLvoid drawScene()
                     if (hitBox == boxIdx)
                     {
                         g_scareActiveTimers[i] = SCARE_DURATION;
+                        event.coolDownTimer = event.coolDownDuration;
                         std::cout << "[SCARE] Jumpscare HIT: " << event.textureName << " Triggered! Active Timer: " << SCARE_DURATION << std::endl;
                     }
                 }
 
-                if (!event.isTriggered) {
+                if (hitBox != boxIdx) {
                     scareBox.size = glm::vec3(0.0f, 0.0f, 0.0f);
                     scareBox.pos = glm::vec3(0.0f, -9999.0f, 0.0f);
                 }
@@ -955,6 +965,7 @@ void MouseButton(int button, int state, int x, int y)
             g_player.camUp,
             g_map.GetBoxes()
         );
+        g_isFanBeam = false;
         StartScanBeam();
     }
     if (IsInputLocked())
@@ -964,6 +975,7 @@ void MouseButton(int button, int state, int x, int y)
         if (state == GLUT_DOWN)
         {
             g_isScanning = true;
+            g_isFanBeam = true;
             glm::vec3 origin = g_player.GetPosition();
             glm::vec3 front = g_player.GetFront();
             g_lidar.ScanFan(origin, front, g_map);
@@ -973,6 +985,7 @@ void MouseButton(int button, int state, int x, int y)
         else if (state == GLUT_UP)
         {
             g_isScanning = false;
+            g_isFanBeam = false;
         }
     }
 }
