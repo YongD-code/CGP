@@ -142,6 +142,12 @@ void Map::InitFromArray(int w, int h, const int* data)
                     wall.texID[0] = TextureManager::Get("hint1");
                     wall.texFlipX[0] = true;
                 }
+                if (x == 6 && z == 30)
+                {
+                    wall.hasTex[0] = true;   // µÞ¸é 
+                    wall.texID[0] = TextureManager::Get("rule");
+                    wall.texFlipX[0] = true;
+                }
                 if (x == 13 && z == 5)
                 {
                     wall.hasTex[2] = true;

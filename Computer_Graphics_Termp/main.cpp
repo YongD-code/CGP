@@ -9,6 +9,7 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
+
 #include <fmod.hpp>
 #include <fmod_errors.h>
 
@@ -144,6 +145,7 @@ void main(int argc, char** argv)
     TextureManager::Load("hint4", "keypad_hint4.png");
     TextureManager::Load("background", "keypad_bg.png");
     TextureManager::Load("human", "human.png");
+    TextureManager::Load("rule", "rule.png");
     TextureManager::Load("help", "message_help.png");
     for (int i = 0; i < 10; i++)
     {
