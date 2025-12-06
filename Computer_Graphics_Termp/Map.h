@@ -40,8 +40,6 @@ public:
     {
         return boxes;
     }
-    // 테스트용 방
-    void InitTestRoom();
 
     // 맵 그리기
     void Draw(
