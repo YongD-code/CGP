@@ -73,7 +73,7 @@ Lidar g_lidar;
 GunRenderer g_gun;
 
 bool g_isScanning = false;
-bool g_darkMode = false;
+bool g_darkMode = true;
 bool g_isFanBeam = false;
 std::string password = "1209";
 std::string entered = "";
