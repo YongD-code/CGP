@@ -62,6 +62,7 @@ GLint uFlipXLoc = -1;
 GLint uHasTexLoc = -1;
 GLint uTextureLoc = -1;
 GLint uRevealMaskLoc = -1;
+GLint uIsScareLoc = -1;
 
 bool cull = false;
 bool wire_mode = false;
@@ -375,11 +376,13 @@ GLuint make_shaderProgram()
     uHasTexLoc = glGetUniformLocation(prog, "uHasTex");
     uTextureLoc = glGetUniformLocation(prog, "uTexture");
     uRevealMaskLoc = glGetUniformLocation(prog, "uRevealMask");
-
+    uIsScareLoc = glGetUniformLocation(prog, "uIsScare");
 
     // 안전빵
+    glUseProgram(prog);
     glUniform1i(uTextureLoc, 0);
     glUniform1i(uRevealMaskLoc, 1);
+    glUniform1i(uIsScareLoc, 0);
 
 
     return prog;
@@ -645,6 +648,7 @@ GLvoid drawScene()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgramID);
     glUniform1i(uDarkModeLoc, g_darkMode ? 1 : 0);
+    glUniform1i(uIsScareLoc, 0);
 
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -759,27 +763,33 @@ GLvoid drawScene()
 
             if (g_scareActiveTimers[i] > 0.0f)
             {
-                glm::vec3 pos = g_player.camPos + g_player.camFront * CAMERA_DISTANCE;
-                scareBox.pos = pos;
-                scareBox.size = glm::vec3(BOX_SIZE * aspect, BOX_SIZE, 0.001f);
-
-                glm::mat4 rotMatrix = glm::lookAt(glm::vec3(0, 0, 0), g_player.camFront, g_player.camUp);
-                rotMatrix = glm::inverse(rotMatrix);
-
-                glm::mat4 modelScare = glm::translate(glm::mat4(1.0f), scareBox.pos);
-                modelScare *= rotMatrix;
-                modelScare = glm::scale(modelScare, scareBox.size);
-
                 glUseProgram(shaderProgramID);
                 glBindVertexArray(VAO_cube);
+
+                glUniform1i(uIsScareLoc, 1);
+                glUniform1i(uDarkModeLoc, 0);
+
+                // 항상 화면 맨 앞에 그리도록 깊이 테스트 끔
+                glDisable(GL_DEPTH_TEST);
+
+                // [-0.5,0.5] -> [-1,1] 이 되도록 스케일
+                glm::mat4 modelScare = glm::mat4(1.0f);
+                modelScare = glm::scale(modelScare, glm::vec3(2.0f, 2.0f, 1.0f));
+
+                glm::mat4 viewId = glm::mat4(1.0f);
+                glm::mat4 projId = glm::mat4(1.0f);
+
                 glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, glm::value_ptr(modelScare));
-                glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(view));
-                glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(proj));
+                glUniformMatrix4fv(uViewLoc, 1, GL_FALSE, glm::value_ptr(viewId));
+                glUniformMatrix4fv(uProjLoc, 1, GL_FALSE, glm::value_ptr(projId));
+
+                // 색은 흰색 / 텍스처 그대로 사용
                 glUniform3fv(uColorLoc, 1, glm::value_ptr(scareBox.color));
 
-                glUniform1i(uTexRotLoc, scareBox.texRot[1]);
-                glUniform1i(uFlipXLoc, scareBox.texFlipX[1] ? 1 : 0);
+                glUniform1i(uTexRotLoc, 0);
+                glUniform1i(uFlipXLoc, 0);
                 glUniform1i(uHasTexLoc, 1);
+
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, scareBox.texID[1]);
                 glUniform1i(uTextureLoc, 0);
@@ -788,12 +798,18 @@ GLvoid drawScene()
                 glBindTexture(GL_TEXTURE_2D, scareBox.revealMask[1]);
                 glUniform1i(uRevealMaskLoc, 1);
 
+                // +Z 면(face=1)만 그리기
                 glDrawElements(
                     GL_TRIANGLES,
                     6,
                     GL_UNSIGNED_INT,
                     (void*)(sizeof(unsigned int) * 1 * 6)
                 );
+
+                // 상태 원복
+                glEnable(GL_DEPTH_TEST);
+                glUniform1i(uIsScareLoc, 0);
+                glUniform1i(uDarkModeLoc, g_darkMode ? 1 : 0);
 
                 glBindVertexArray(0);
             }

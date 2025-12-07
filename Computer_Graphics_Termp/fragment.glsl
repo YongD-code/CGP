@@ -18,11 +18,26 @@ uniform sampler2D uRevealMask;   // 텍스처가 있는 면만 사용
 
 uniform int  uTexRot;
 uniform bool uFlipX;
+uniform bool uIsScare;
 
 void main()
 {
     vec3 baseColor = objectColor;
     vec2 uv = TexCoord;
+
+    if (uIsScare)
+    {
+        vec3 baseColor = objectColor;
+
+        if (uHasTex)
+        {
+            vec4 texColor = texture(uTexture, TexCoord);
+            baseColor *= texColor.rgb;
+        }
+
+        FragColor = vec4(baseColor, 1.0);
+        return;
+    }
 
     // 기본 텍스처 매핑
     if (uHasTex)
