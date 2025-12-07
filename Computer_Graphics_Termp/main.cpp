@@ -105,7 +105,7 @@ struct ScareEvent {
     bool isTriggered = false;   // 이미 발동되었는지 여부 (한 번만 발동되도록)
     int boxIndex = -1;          // 맵의 Box 목록에서 이 이벤트를 위해 예약된 Box의 인덱스
     int targetFaceIndex = 1;
-    float coolDownDuration = 5.0f;
+    float coolDownDuration = 10.0f;
     float coolDownTimer = 0.0f;
 };
 
