@@ -111,7 +111,7 @@ struct ScareEvent {
 };
 
 std::vector<ScareEvent> g_scareEvents;
-const float SCARE_DURATION = 10.f; 
+const float SCARE_DURATION = 0.5f; 
 
 
 float g_scareActiveTimers[3] = { 0.0f, 0.0f, 0.0f };
@@ -768,6 +768,7 @@ GLvoid drawScene()
 
                 glUniform1i(uIsScareLoc, 1);
                 glUniform1i(uDarkModeLoc, 0);
+                AudioManager::Instance().Play("scream");
 
                 // 항상 화면 맨 앞에 그리도록 깊이 테스트 끔
                 glDisable(GL_DEPTH_TEST);
