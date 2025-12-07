@@ -117,17 +117,14 @@ const float SCARE_DURATION = 0.5f;
 float g_scareActiveTimers[3] = { 0.0f, 0.0f, 0.0f };
 
 const std::vector<glm::vec3> DEBUG_TRIGGER_POINTS = {
-    // 1. (x=3.0, z=11.0) -> (-28.0f, 2.0f, -16.0f)
     glm::vec3(-28.0f, 2.0f, -16.0f),
 
-    // 2. (x=15.0, z=15.0) -> (28.0f, 2.0f, 0.0f)
     glm::vec3(32.0f, 2.0f, 0.0f),
 
-    // 3. (x=7.0, z=6.0) -> (-4.0f, 2.0f, -36.0f)
     glm::vec3(-8.0f, 2.0f, -36.0f)
 };
 
-bool g_showDebugPoints = true; //디버깅 안할때는 false로 바꾸고
+bool g_showDebugPoints = false; //디버깅 안할때는 false로 바꾸고
 
 bool IsInputLocked()
 {
