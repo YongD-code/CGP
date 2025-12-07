@@ -23,7 +23,7 @@ Player::Player()
     lastY = screenHeight * 0.5f;
     firstMouse = true;
 
-    moveSpeed = 20.0f;
+    moveSpeed = 6.0f;
     mouseSensitivity = 0.1f;
     ignoreMouse = false;
 
@@ -197,6 +197,7 @@ glm::mat4 Player::UpdateMoveAndGetViewMatrix(float dt, const Map& map)
         {
             const char* stepName = nextLeftStep ? "footL" : "footR";
             AudioManager::Instance().Play(stepName);
+            AudioManager::Instance().SetVolume(stepName, 1.f);
             nextLeftStep = !nextLeftStep;
             footstepTimer = STEP_INTERVAL;
         }
