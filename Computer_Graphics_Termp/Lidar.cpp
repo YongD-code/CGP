@@ -168,18 +168,18 @@ void Lidar::ScanSingleRay(const glm::vec3& origin, const glm::vec3& dir, const M
 
     const float maxDist = 1000.0f;
 
-    // ★ faceIndex와 boxIndex를 모두 얻는 Raycast 호출
+    // faceIndex와 boxIndex를 모두 얻는 Raycast 호출
     if (Raycast(origin, nDir, boxes, maxDist, hit, &boxIndex, &faceIndex))
     {
         AddHitPoint(hit);
 
-        // ★ 유효한 박스 + face 일 때만 revealMask 기록
+        // 유효한 박스 + face 일 때만 revealMask 기록
         if (boxIndex >= 0 && faceIndex >= 0)
         {
             const Box& b = boxes[boxIndex];
 
             float u, v;
-            // ★ texRot 포함한 UV 계산
+            // texRot 포함한 UV 계산
             ComputeFaceUV(b, faceIndex, b.texRot[faceIndex], hit, u, v);
 
             int X = int(u * 255);
